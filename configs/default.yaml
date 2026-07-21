@@ -1,0 +1,14 @@
+# PPO Hyperparameters
+env_name: "CheetahRun"  # Person A will confirm this after testing
+seed: 42
+total_timesteps: 1000000
+steps_per_epoch: 4096
+epochs: 50
+gamma: 0.99
+lam: 0.95
+clip_ratio: 0.2
+pi_lr: 0.0003
+vf_lr: 0.001
+train_iters: 80
+batch_size: 256
+hidden_dim: 256

@@ -1,7 +1,7 @@
 [project]
 name = "rl-launchpad"
 version = "0.1.0"
-description = "Launchpad 2026 RL Track — From-scratch PPO on MuJoCo Playground"
+description = "Launchpad 2026 RL Track - From-scratch PPO on MuJoCo Playground"
 requires-python = ">=3.10"
 dependencies = [
     "playground",
