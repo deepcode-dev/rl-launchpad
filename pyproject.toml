@@ -1,0 +1,26 @@
+[project]
+name = "rl-launchpad"
+version = "0.1.0"
+description = "Launchpad 2026 RL Track — From-scratch PPO on MuJoCo Playground"
+requires-python = ">=3.10"
+dependencies = [
+    "playground",
+    "stable-baselines3",
+    "torch",
+    "numpy",
+    "matplotlib",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[tool.ruff]
+line-length = 100
