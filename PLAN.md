@@ -41,17 +41,13 @@ Three people, three independent workstreams, zero blocking.
 A0 -> A1 -> A2 -> A3 -> A4 -> A5 -> A6
 B0 -> B1 -> B2         -> B3 -> B4 -> B5 -> B6
 C0 -> C1 -> C2 -> C3 -> C4 -> C5 -> C6 -> C7 -> C8 -> C9 -> C10
-```
+
 
 Only 2 real blockers:
 - B4 needs A5 (A's 3 checkpoints)
 - C8 needs B4 (eval numbers)
 
 Everything else runs in parallel.
-
----
-
-# Person A: Core RL Implementation
 
 ## A0: Read docs + pick MJX environment
 
@@ -101,8 +97,8 @@ Write in `docs/learning-notes.md`:
 - [ ] Read CleanRL `ppo_continuous_action.py`
 - [ ] Ran MJX locomotion notebook on Colab
 - [ ] Picked environment and documented it in `docs/learning-notes.md`
-
 ---
+
 
 ## A1: Implement actor-critic network
 
@@ -1563,7 +1559,7 @@ All hyperparameters are in `configs/default.yaml`.
 - All seeds are pinned in `configs/default.yaml`
 - All dependency versions are in `pyproject.toml`
 - To reproduce: clone, install, run
-```
+
 
 ### Done when
 
@@ -1597,4 +1593,4 @@ Upload everything to boardingpass.work.
 ### Done when
 
 - [ ] All 3 links submitted on boardingpass.work
-```
+
