@@ -1,5 +1,3 @@
-Here's the complete, properly formatted `.md` file. Copy this into a file called `PLAN.md`:
-
 ```markdown
 # RL Launchpad — 5-Day Sprint Plan
 
