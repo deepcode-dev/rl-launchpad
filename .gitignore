@@ -9,3 +9,4 @@ outputs/
 *.mp4
 .DS_Store
 requirements_pinned.txt
+*.egg-info
