@@ -14,7 +14,7 @@ From-scratch PPO implementation on MuJoCo Playground.
 
 ## Getting Started
 ```bash
-pip install -e .
+uv pip install -e .
 python ppo/train.py
 
 # running eval
