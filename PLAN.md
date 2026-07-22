@@ -633,9 +633,7 @@ Read docs, install dependencies, and test the MJX environment. Do NOT start codi
 Run these commands one by one in a terminal:
 
 ```bash
-python -m venv venv
-source venv/bin/activate
-pip install playground stable-baselines3 torch numpy matplotlib pyyaml
+uv pip install -e .
 ```
 
 Verify GPU works:
@@ -1099,7 +1097,10 @@ dev = [
 
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
-build-backend = "setuptools.backends._legacy:_Backend"
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["ppo*", "eval*", "baselines*"]
 
 [tool.ruff]
 line-length = 100
@@ -1142,7 +1143,7 @@ From-scratch PPO implementation on MuJoCo Playground.
 
 ## Getting Started
 ```bash
-pip install -e .
+uv pip install -e .
 python ppo/train.py
 ```
 
@@ -1536,9 +1537,7 @@ Update README with complete clone-to-eval instructions.
 ```bash
 git clone https://github.com/YOUR_USERNAME/rl-launchpad.git
 cd rl-launchpad
-python -m venv venv
-source venv/bin/activate
-pip install -e .
+uv pip install -e .
 python ppo/train.py
 ```
 
