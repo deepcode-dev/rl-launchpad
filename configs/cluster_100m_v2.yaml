@@ -2,13 +2,13 @@
 env_name: "Go1JoystickFlatTerrain"
 seed: 10
 seeds: [10]
-num_envs: 32768
+num_envs: 131072
 history_len: 1
 episode_length: 1000
-steps_per_epoch: 655360       # 32768 envs * 20 policy steps
-epochs: 305
-total_timesteps_per_seed: 199884800
-total_timesteps: 199884800
+steps_per_epoch: 2621440       # 131072 envs * 20 policy steps
+epochs: 76
+total_timesteps_per_seed: 199229440
+total_timesteps: 199229440
 gamma: 0.97
 lam: 0.95
 clip_ratio: 0.2
@@ -17,7 +17,7 @@ anneal_lr: true
 target_kl: 0.02
 max_grad_norm: 1.0
 train_iters: 4
-batch_size: 20480
+batch_size: 65536
 hidden_dim: 512
 hidden_sizes: [512, 256, 128]
 vf_coef: 0.5
