@@ -264,6 +264,7 @@ def train_single_seed(seed, config):
             returns=ret_tensor,
             advantages=adv_tensor,
             critic_observations=critic_obs_tensor,
+            old_values=values_tensor.flatten(0, 1),
             epochs=train_iters,
             batch_size=batch_size,
             clip_ratio=clip_ratio,

@@ -78,8 +78,13 @@ def ppo_clip_loss(log_probs, old_log_probs, advantages, clip_ratio=0.2):
     return -torch.min(surr1, surr2).mean()
 
 
-def value_loss(values, returns):
-    """Compute mean squared value-function error."""
+def value_loss(values, returns, old_values=None, clip_ratio=None):
+    """Compute clipped or unclipped mean squared value-function error."""
+    if old_values is not None and clip_ratio is not None:
+        v_clipped = old_values + torch.clamp(values - old_values, -clip_ratio, clip_ratio)
+        v_loss1 = (values - returns) ** 2
+        v_loss2 = (v_clipped - returns) ** 2
+        return 0.5 * torch.max(v_loss1, v_loss2).mean()
     return 0.5 * ((values - returns) ** 2).mean()
 
 
@@ -92,6 +97,7 @@ def update(
     returns,
     advantages,
     critic_observations=None,
+    old_values=None,
     epochs=10,
     batch_size=256,
     clip_ratio=0.2,
@@ -117,8 +123,7 @@ def update(
     ):
         raise ValueError("all PPO rollout tensors must have the same leading dimension")
 
-    # Normalize once over the full rollout.  Per-minibatch normalization changes
-    # the surrogate objective from one minibatch to the next.
+    # Normalize once over the full rollout.
     advantages = (advantages - advantages.mean()) / (advantages.std(unbiased=False) + 1e-8)
     totals = {"policy_loss": 0.0, "value_loss": 0.0, "entropy": 0.0, "approx_kl": 0.0, "clip_fraction": 0.0}
     num_updates = 0
@@ -137,9 +142,10 @@ def update(
             )
             batch_old_log_probs = old_log_probs[batch_idx]
             batch_advantages = advantages[batch_idx]
+            batch_old_values = old_values[batch_idx] if old_values is not None else None
 
             pol_loss = ppo_clip_loss(new_log_probs, batch_old_log_probs, batch_advantages, clip_ratio)
-            val_loss = value_loss(values, returns[batch_idx])
+            val_loss = value_loss(values, returns[batch_idx], old_values=batch_old_values, clip_ratio=clip_ratio)
             entropy_bonus = entropy.mean()
             total_loss = pol_loss + vf_coef * val_loss - ent_coef * entropy_bonus
 
@@ -159,9 +165,14 @@ def update(
             epoch_kls.append(approx_kl)
             totals["clip_fraction"] += ((ratio - 1.0).abs() > clip_ratio).float().mean().item()
             num_updates += 1
+
+            # Minibatch level KL early stopping to prevent policy destruction
+            if target_kl is not None and approx_kl > 1.5 * float(target_kl):
+                early_stopped = True
+                break
+
         epochs_completed += 1
-        if target_kl is not None and sum(epoch_kls) / len(epoch_kls) > float(target_kl):
-            early_stopped = True
+        if early_stopped:
             break
 
     result = {name: value / num_updates for name, value in totals.items()}
