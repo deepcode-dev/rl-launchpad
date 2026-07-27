@@ -1,16 +1,3 @@
-## Evidence
+# Evidence
 
-### Results
-- [Insert comparison table from docs/eval-results.md]
-- [Insert training curves plot]
-- [Insert evaluation bar chart]
-
-### Analysis
-- How does our PPO compare to SB3?
-- What does mean +/- std tell us about consistency?
-- Are there any seeds that performed significantly differently?
-
-### Statistical Honesty
-- Number of evaluation episodes: 50
-- Number of training seeds: 3
-- Fixed eval seeds (disjoint from training): Yes (seed 999)
+Final evidence is generated from `checkpoints/ppo_eval_summary.json`, `baselines/sb3_ppo_eval_summary.json`, and their measured training histories. `eval/plot_benchmark.py` rejects missing or incompatible protocols; `eval/build_submission.py` rejects fewer than three complete seeds. Pilot and legacy results are not final evidence.

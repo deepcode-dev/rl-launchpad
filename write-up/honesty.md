@@ -1,20 +1,3 @@
-## Honesty & Trajectory
+# Honesty & trajectory
 
-### Known Failure Modes
-- [Where does the policy fail?]
-- [Show video or describe specific failure cases]
-- [What conditions cause degradation?]
-
-### Negative Results
-- [What did you try that didn't work?]
-- [What hyperparameter combinations failed?]
-- [What architecture choices were worse?]
-
-### What We Would Do With Two More Weeks
-- [Concrete next step 1]
-- [Concrete next step 2]
-- [Concrete next step 3]
-
-### Lessons Learned
-- [What surprised you?]
-- [What would you do differently?]
+Legacy checkpoints are invalid because the initial implementation crossed environment trajectories during GAE, failed to autoreset terminal slots, changed task reward, and used unbounded actions. The early benchmark chart was synthetic and has been removed from the evidence pipeline. A corrected but overtrained three-seed run is also retained as negative validation evidence. `docs/failures.md` and `docs/training-log.md` record the defects, corrections, tests, and horizon-selection result.
