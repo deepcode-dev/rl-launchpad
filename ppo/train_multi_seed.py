@@ -377,6 +377,8 @@ def main(config_path="configs/default.yaml", seed_override=None, resume_override
     )
     config = {**config, "seeds": seeds, "seed": seeds[0]}
     expected_total = int(config.get("total_timesteps_per_seed", 0)) * len(seeds)
+    if seed_override is not None:
+        config["total_timesteps"] = expected_total
     configured_total = config.get("total_timesteps")
     if configured_total is not None and int(configured_total) != expected_total:
         raise ValueError(
