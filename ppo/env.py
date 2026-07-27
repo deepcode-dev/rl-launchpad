@@ -122,14 +122,19 @@ class MJXVectorPyTorchWrapper:
 
     @staticmethod
     def _to_tensor(array) -> torch.Tensor:
-        """Share JAX buffers with PyTorch; fall back to an owned CPU copy."""
-        # Disable DLPack to avoid PyTorch/JAX CPU deadlocks and memory leaks on Windows
-        return torch.from_numpy(np.array(array, copy=True, order="C"))
+        """Share JAX buffers with PyTorch via DLPack GPU zero-copy; fall back to numpy for CPU."""
+        try:
+            return torch.utils.dlpack.from_dlpack(jax.dlpack.to_dlpack(array))
+        except Exception:
+            return torch.from_numpy(np.array(array, copy=True, order="C"))
 
     def _to_jax_action(self, action) -> jax.Array:
-        if isinstance(action, torch.Tensor):
-            return jnp.asarray(action.detach().cpu().numpy(), dtype=jnp.float32)
-        return jnp.asarray(action, dtype=jnp.float32)
+        try:
+            return jax.dlpack.from_dlpack(torch.utils.dlpack.to_dlpack(action))
+        except Exception:
+            if isinstance(action, torch.Tensor):
+                return jnp.asarray(action.detach().cpu().numpy(), dtype=jnp.float32)
+            return jnp.asarray(action, dtype=jnp.float32)
 
     def _split_reset_keys(self) -> jax.Array:
         assert self._slot_keys is not None
