@@ -155,11 +155,8 @@ class MJXVectorPyTorchWrapper:
             root_key = jax.random.PRNGKey(0 if seed is None else int(seed))
             self._slot_keys = jax.random.split(root_key, self.num_envs)
         self.states = self._v_reset(self._split_reset_keys())
-        # Match MuJoCo Playground's default BraxAutoResetWrapper: each vector
-        # slot caches its randomized initial state and restores that immutable
-        # pytree on episode boundaries. This avoids compiling/executing a full
-        # batch reset whenever one slot terminates.
         self._initial_states = jax.tree_util.tree_map(lambda value: value, self.states)
+        self._last_ema_action = None
         obs = self._obs_array(self.states.obs)
         self.obs_history = jnp.repeat(obs[:, None, :], self.history_len, axis=1)
         self._episode_steps = jnp.zeros(self.num_envs, dtype=jnp.int32)
@@ -178,8 +175,13 @@ class MJXVectorPyTorchWrapper:
             raise ValueError(
                 f"Expected actions with shape {(self.num_envs, self.action_dim)}, got {action_jax.shape}"
             )
-        # The Playground joystick tasks interpret actions as normalized targets.
+        # Low-pass EMA Action Filtering for smooth joint targets
         action_jax = jnp.clip(action_jax, self.action_low, self.action_high)
+        if self._last_ema_action is None or self._last_ema_action.shape != action_jax.shape:
+            self._last_ema_action = action_jax
+        else:
+            action_jax = 0.8 * self._last_ema_action + 0.2 * action_jax
+            self._last_ema_action = action_jax
 
         terminal_states = self._v_step(self.states, action_jax)
         reward_array = jnp.asarray(terminal_states.reward, dtype=jnp.float32)
