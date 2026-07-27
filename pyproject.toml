@@ -2,21 +2,39 @@
 name = "rl-launchpad"
 version = "0.1.0"
 description = "Launchpad 2026 RL Track - From-scratch PPO on MuJoCo Playground"
-requires-python = ">=3.10"
+requires-python = ">=3.12,<3.13"
 dependencies = [
-    "playground",
-    "stable-baselines3",
-    "torch",
-    "numpy",
-    "matplotlib",
-    "pyyaml",
+    "playground==0.2.0",
+    "stable-baselines3==2.8.0",
+    "gymnasium==1.2.3",
+    "jax==0.11.0",
+    "mujoco==3.10.0",
+    "torch==2.6.0",
+    "torchvision==0.21.0",
+    "torchaudio==2.6.0",
+    "numpy==2.5.1",
+    "matplotlib==3.11.1",
+    "pyyaml==6.0.3",
+    "imageio==2.37.4",
+    "imageio-ffmpeg==0.6.0",
+    "warp-lang==1.15.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
-    "ruff",
+    "pytest==9.1.1",
+    "ruff==0.15.22",
 ]
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu124" }]
+torchvision = [{ index = "pytorch-cu124" }]
+torchaudio = [{ index = "pytorch-cu124" }]
 
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]

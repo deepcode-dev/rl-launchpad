@@ -1,15 +1,3 @@
-## Constraints
+# Constraints
 
-### Compute
-- GPU: [X]
-- Training time for our PPO: [X] seconds
-- Training time for SB3: [X] seconds
-- Total env steps: [X]
-
-### Sample Efficiency
-- Our PPO: [X] steps to reach [Y] reward
-- SB3: [X] steps to reach [Y] reward
-
-### Trade-offs
-- [What trade-offs did you observe?]
-- [Did more compute help? Did bigger networks help?]
+PyTorch policy optimization uses an RTX 3070, while native Windows JAX exposes MJX on CPU. Reported wall time therefore includes host transfers and is not an all-GPU throughput claim. The viewer is display-only, so mouse pushes do not perturb policy physics. See the generated submission for measured step budgets and wall times.
