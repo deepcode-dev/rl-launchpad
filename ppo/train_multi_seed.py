@@ -207,8 +207,7 @@ def train_single_seed(seed, config):
                 action, log_prob = agent.get_action(obs_dev)
                 value = agent.get_value(obs_dev, critic_obs_dev)
 
-            action_cpu = action.cpu()
-            next_obs, reward, done, truncated_step, step_info = env.step(action_cpu)
+            next_obs, reward, done, truncated_step, step_info = env.step(action)
             truncation_value = torch.zeros(num_envs, device=device)
             if bool(truncated_step.any()):
                 with torch.no_grad():
