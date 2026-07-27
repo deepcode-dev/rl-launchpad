@@ -410,6 +410,7 @@ def main(config_path="configs/default.yaml", seed_override=None, resume_override
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train all configured PPO seeds.")
     parser.add_argument("--config", default="configs/default.yaml")
+    parser.add_argument("--seed", type=int, default=None, help="Override seed to train")
     parser.add_argument("--resume", action="store_true", help="Resume from existing checkpoint")
     args = parser.parse_args()
     main(args.config, seed_override=args.seed, resume_override=args.resume)
