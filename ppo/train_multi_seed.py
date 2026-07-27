@@ -165,10 +165,18 @@ def train_single_seed(seed, config):
         "wall_times": [],
     }
 
+    # Pre-allocate contiguous GPU rollout buffers to eliminate thousands of CUDA allocation kernels per epoch
+    obs_buffer = torch.empty((num_steps, num_envs, obs_dim), device=device)
+    critic_obs_buffer = torch.empty((num_steps, num_envs, critic_obs_dim), device=device)
+    actions_buffer = torch.empty((num_steps, num_envs, act_dim), device=device)
+    log_probs_buffer = torch.empty((num_steps, num_envs), device=device)
+    values_buffer = torch.empty((num_steps, num_envs), device=device)
+    rewards_buffer = torch.empty((num_steps, num_envs), device=device)
+    terminated_buffer = torch.empty((num_steps, num_envs), device=device, dtype=torch.bool)
+    truncated_buffer = torch.empty((num_steps, num_envs), device=device, dtype=torch.bool)
+    truncation_values_buffer = torch.empty((num_steps, num_envs), device=device)
+
     for epoch in range(1, epochs + 1):
-        observations, critic_observations, actions, rewards, terminated, truncated_flags, truncation_values, log_probs, values = (
-            [], [], [], [], [], [], [], [], []
-        )
         epoch_rewards = []
         epoch_linear_velocity_errors = []
         epoch_yaw_rate_errors = []
@@ -212,15 +220,15 @@ def train_single_seed(seed, config):
                     truncated_step.to(device), final_values, truncation_value
                 )
 
-            observations.append(obs_dev)
-            critic_observations.append(critic_obs_dev)
-            actions.append(action)
-            rewards.append(reward.to(device))
-            terminated.append(done.to(device))
-            truncated_flags.append(truncated_step.to(device))
-            truncation_values.append(truncation_value)
-            log_probs.append(log_prob)
-            values.append(value)
+            obs_buffer[step] = obs_dev
+            critic_obs_buffer[step] = critic_obs_dev
+            actions_buffer[step] = action
+            rewards_buffer[step] = reward.to(device)
+            terminated_buffer[step] = done.to(device)
+            truncated_buffer[step] = truncated_step.to(device)
+            truncation_values_buffer[step] = truncation_value
+            log_probs_buffer[step] = log_prob
+            values_buffer[step] = value
 
             epoch_rewards.append(reward.mean().item())
             epoch_linear_velocity_errors.append(
@@ -237,21 +245,16 @@ def train_single_seed(seed, config):
         with torch.no_grad():
             next_value = agent.get_value(obs.to(device), critic_obs.to(device))
 
-        rewards_tensor = torch.stack(rewards)
-        values_tensor = torch.stack(values)
-        terminated_tensor = torch.stack(terminated)
-        truncated_tensor = torch.stack(truncated_flags)
-        truncation_values_tensor = torch.stack(truncation_values)
         advantages, returns = compute_gae(
-            rewards_tensor, values_tensor, terminated_tensor, next_value,
-            gamma=gamma, lam=lam, truncated=truncated_tensor,
-            truncation_values=truncation_values_tensor,
+            rewards_buffer, values_buffer, terminated_buffer, next_value,
+            gamma=gamma, lam=lam, truncated=truncated_buffer,
+            truncation_values=truncation_values_buffer,
         )
 
-        obs_tensor = torch.stack(observations).flatten(0, 1)
-        critic_obs_tensor = torch.stack(critic_observations).flatten(0, 1)
-        act_tensor = torch.stack(actions).flatten(0, 1)
-        old_log_probs = torch.stack(log_probs).flatten(0, 1)
+        obs_tensor = obs_buffer.flatten(0, 1)
+        critic_obs_tensor = critic_obs_buffer.flatten(0, 1)
+        act_tensor = actions_buffer.flatten(0, 1)
+        old_log_probs = log_probs_buffer.flatten(0, 1)
         adv_tensor = advantages.flatten(0, 1)
         ret_tensor = returns.flatten(0, 1)
 
@@ -264,7 +267,7 @@ def train_single_seed(seed, config):
             returns=ret_tensor,
             advantages=adv_tensor,
             critic_observations=critic_obs_tensor,
-            old_values=values_tensor.flatten(0, 1),
+            old_values=values_buffer.flatten(0, 1),
             epochs=train_iters,
             batch_size=batch_size,
             clip_ratio=clip_ratio,
