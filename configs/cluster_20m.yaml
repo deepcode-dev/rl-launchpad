@@ -1,0 +1,25 @@
+# Single-seed learning gate. Continue to 200M only if command tracking improves.
+env_name: "Go1JoystickFlatTerrain"
+seed: 10
+seeds: [10]
+num_envs: 8192
+history_len: 1
+episode_length: 1000
+steps_per_epoch: 163840       # 8192 envs * 20 policy steps
+epochs: 122
+total_timesteps_per_seed: 19988480
+total_timesteps: 19988480
+gamma: 0.97
+lam: 0.95
+clip_ratio: 0.2
+pi_lr: 0.0003
+anneal_lr: true
+target_kl: 0.02
+max_grad_norm: 1.0
+train_iters: 4
+batch_size: 5120             # 32 minibatches per rollout
+hidden_dim: 512
+hidden_sizes: [512, 256, 128]
+vf_coef: 0.5
+ent_coef: 0.01
+checkpoint_dir: "checkpoints/cluster_20m"

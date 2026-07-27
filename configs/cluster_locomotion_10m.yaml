@@ -1,0 +1,39 @@
+# Stage 1 locomotion curriculum. Train movement first; evaluate on the stock task.
+env_name: "Go1JoystickFlatTerrain"
+seed: 10
+seeds: [10]
+num_envs: 8192
+history_len: 1
+episode_length: 1000
+steps_per_epoch: 163840
+epochs: 61
+total_timesteps_per_seed: 9994240
+total_timesteps: 9994240
+gamma: 0.97
+lam: 0.95
+clip_ratio: 0.2
+pi_lr: 0.0003
+anneal_lr: true
+min_lr_factor: 0.1
+target_kl: 0.02
+max_grad_norm: 1.0
+train_iters: 4
+batch_size: 5120
+hidden_dim: 512
+hidden_sizes: [512, 256, 128]
+vf_coef: 0.5
+initial_log_std: -1.9
+ent_coef: 0.001
+ent_coef_final: 0.0002
+checkpoint_interval: 20
+
+# The stock Gaussian tracking reward is nearly zero when a new policy stands
+# still under a fast command. Broaden and strengthen tracking during stage 1,
+# and reduce the pose incentive that the 20M v2 policy exploited.
+environment_overrides:
+  reward_config.tracking_sigma: 1.0
+  reward_config.scales.tracking_lin_vel: 3.0
+  reward_config.scales.tracking_ang_vel: 1.5
+  reward_config.scales.pose: 0.1
+
+checkpoint_dir: "checkpoints/cluster_locomotion_10m"

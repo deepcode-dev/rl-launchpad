@@ -1,0 +1,22 @@
+# Fast contract validation; not a submission training configuration.
+env_name: "Go1JoystickFlatTerrain"
+seed: 999
+seeds: [999]
+num_envs: 4
+history_len: 2
+episode_length: 25
+steps_per_epoch: 32
+epochs: 2
+total_timesteps_per_seed: 64
+total_timesteps: 64
+gamma: 0.99
+lam: 0.95
+clip_ratio: 0.2
+pi_lr: 0.0003
+max_grad_norm: 0.5
+train_iters: 2
+batch_size: 16
+hidden_dim: 64
+vf_coef: 0.5
+ent_coef: 0.01
+checkpoint_dir: "checkpoints/smoke"

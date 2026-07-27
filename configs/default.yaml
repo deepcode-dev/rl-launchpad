@@ -1,14 +1,22 @@
-# PPO Hyperparameters
-env_name: "CheetahRun"  # Person A will confirm this after testing
-seed: 42
-total_timesteps: 1000000
-steps_per_epoch: 4096
-epochs: 50
+# Submission configuration: Go1 locomotion with the stock native reward.
+env_name: "Go1JoystickFlatTerrain"
+seed: 10
+seeds: [10, 20, 30]
+num_envs: 128
+history_len: 1
+episode_length: 1000
+steps_per_epoch: 16384
+epochs: 20
+total_timesteps_per_seed: 327680    # early stop selected on the 10,000-series validation block
+total_timesteps: 983040             # 3 seeds * 327680 steps/seed
 gamma: 0.99
 lam: 0.95
 clip_ratio: 0.2
 pi_lr: 0.0003
-vf_lr: 0.001
-train_iters: 80
-batch_size: 256
-hidden_dim: 256
+max_grad_norm: 0.5
+train_iters: 4
+batch_size: 5120
+hidden_dim: 512
+vf_coef: 0.5
+ent_coef: 0.01
+baseline_n_steps: 128              # 128 envs * 128 steps = custom rollout size
