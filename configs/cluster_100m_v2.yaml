@@ -1,27 +1,27 @@
 # 100M-step flat-terrain config based on successful cluster_20m_v2 hotfix parameters.
 env_name: "Go1JoystickFlatTerrain"
-seed: 40
-seeds: [40, 50, 60, 70]
-num_envs: 131072
+seed: 70
+seeds: [70]
+num_envs: 32768
 history_len: 1
 episode_length: 1000
-steps_per_epoch: 2621440       # 131072 envs * 20 policy steps
-epochs: 76
+steps_per_epoch: 655360       # 32768 envs * 20 policy steps
+epochs: 304
 total_timesteps_per_seed: 199229440
-total_timesteps: 796917760
+total_timesteps: 199229440
 gamma: 0.97
 lam: 0.95
 clip_ratio: 0.2
 pi_lr: 0.0003
 anneal_lr: true
-target_kl: 0.02
+target_kl: 0.01
 max_grad_norm: 1.0
 train_iters: 4
-batch_size: 65536
+batch_size: 5120
 hidden_dim: 512
 hidden_sizes: [512, 256, 128]
 vf_coef: 0.5
 initial_log_std: -1.0
 ent_coef: 0.005
-ent_coef_final: 0.001
+ent_coef_final: 0.0002
 checkpoint_dir: "checkpoints/cluster_100m_v2"

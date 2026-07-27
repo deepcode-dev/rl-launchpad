@@ -57,7 +57,8 @@ class MJXVectorPyTorchWrapper:
         self.states = None
         self._initial_states = None
         self.obs_history: jax.Array | None = None
-        self._episode_steps = jnp.zeros(self.num_envs, dtype=jnp.int32)
+        # Stagger initial episode steps to prevent synchronized resets
+        self._episode_steps = jax.random.randint(jax.random.PRNGKey(42), (self.num_envs,), 0, self.episode_length, dtype=jnp.int32)
         self._jax_platform = jax.devices()[0].platform
         self.reset(seed=seed)
 
@@ -185,7 +186,7 @@ class MJXVectorPyTorchWrapper:
         if self._last_ema_action is None or self._last_ema_action.shape != action_jax.shape:
             self._last_ema_action = action_jax
         else:
-            action_jax = 0.8 * self._last_ema_action + 0.2 * action_jax
+            action_jax = 0.7 * self._last_ema_action + 0.3 * action_jax
             self._last_ema_action = action_jax
 
         terminal_states = self._v_step(self.states, action_jax)
