@@ -31,7 +31,7 @@ def save_checkpoint(
         "checkpoint_format": "raw_state_dict",
         "algorithm": "PPO",
         "training_contract": TRAINING_CONTRACT,
-        "policy_distribution": "tanh_squashed_normal",
+        "policy_distribution": "clipped_normal",
         "observation_normalization": "running_mean_variance",
         "reward_source": "mujoco_playground_state_reward",
         "physics_backend": "jax",
@@ -176,6 +176,8 @@ def train_single_seed(seed, config):
     truncated_buffer = torch.empty((num_steps, num_envs), device=device, dtype=torch.bool)
     truncation_values_buffer = torch.empty((num_steps, num_envs), device=device)
 
+    learning_rate = pi_lr
+
     for epoch in range(1, epochs + 1):
         epoch_rewards = []
         epoch_linear_velocity_errors = []
@@ -184,16 +186,17 @@ def train_single_seed(seed, config):
         epoch_positive_reward_fractions = []
         epoch_termination_fractions = []
 
-        if config.get("anneal_lr", True):
-            min_lr_factor = float(config.get("min_lr_factor", 0.0))
-            learning_rate = pi_lr * (
-                1.0
-                - (1.0 - min_lr_factor) * (epoch - 1) / max(epochs - 1, 1)
-            )
-            for parameter_group in optimizer.param_groups:
-                parameter_group["lr"] = learning_rate
-        else:
-            learning_rate = pi_lr
+        if epoch > 1:
+            last_kl = history["approx_kls"][-1]
+            target_kl = config.get("target_kl", 0.02)
+            if last_kl > target_kl * 2.0:
+                learning_rate = max(learning_rate / 1.5, 1e-5)
+            elif last_kl < target_kl / 2.0:
+                learning_rate = min(learning_rate * 1.5, pi_lr)
+        
+        for parameter_group in optimizer.param_groups:
+            parameter_group["lr"] = learning_rate
+
         schedule_fraction = (epoch - 1) / max(epochs - 1, 1)
         entropy_coefficient = (
             ent_coef_start

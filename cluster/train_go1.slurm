@@ -19,16 +19,14 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export JAX_COMPILATION_CACHE_DIR="$HOME/.cache/jax"
 
 CONFIG_PATH="${CONFIG_PATH:-configs/cluster_smoke.yaml}"
-TRAIN_SEED="${TRAIN_SEED:-10}"
-
-echo "Host: $(hostname)"
-echo "Config: $CONFIG_PATH"
-echo "Seed: $TRAIN_SEED"
-nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader || true
+SEED_FLAG=""
+if [ -n "${TRAIN_SEED:-}" ] && [ "${TRAIN_SEED}" != "none" ]; then
+    SEED_FLAG="--seed ${TRAIN_SEED}"
+fi
 
 RESUME_FLAG=""
 if [ "${RESUME:-false}" = "true" ]; then
     RESUME_FLAG="--resume"
 fi
 
-srun python -u ppo/train_multi_seed.py --config "$CONFIG_PATH" --seed "$TRAIN_SEED" $RESUME_FLAG
+srun python -u ppo/train_multi_seed.py --config "$CONFIG_PATH" $SEED_FLAG $RESUME_FLAG

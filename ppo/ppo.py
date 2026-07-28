@@ -1,5 +1,5 @@
 import torch
-
+import torch.nn.functional as F
 
 TRAINING_CONTRACT = "custom-ppo-privileged-critic-tracking-v3"
 
@@ -79,13 +79,13 @@ def ppo_clip_loss(log_probs, old_log_probs, advantages, clip_ratio=0.2):
 
 
 def value_loss(values, returns, old_values=None, clip_ratio=None):
-    """Compute clipped or unclipped mean squared value-function error."""
+    """Compute clipped or unclipped Huber value-function error."""
     if old_values is not None and clip_ratio is not None:
         v_clipped = old_values + torch.clamp(values - old_values, -clip_ratio, clip_ratio)
-        v_loss1 = (values - returns) ** 2
-        v_loss2 = (v_clipped - returns) ** 2
-        return 0.5 * torch.max(v_loss1, v_loss2).mean()
-    return 0.5 * ((values - returns) ** 2).mean()
+        v_loss1 = F.huber_loss(values, returns, reduction="none")
+        v_loss2 = F.huber_loss(v_clipped, returns, reduction="none")
+        return torch.max(v_loss1, v_loss2).mean()
+    return F.huber_loss(values, returns)
 
 
 def update(
@@ -123,8 +123,6 @@ def update(
     ):
         raise ValueError("all PPO rollout tensors must have the same leading dimension")
 
-    # Normalize once over the full rollout.
-    advantages = (advantages - advantages.mean()) / (advantages.std(unbiased=False) + 1e-8)
     totals = {"policy_loss": 0.0, "value_loss": 0.0, "entropy": 0.0, "approx_kl": 0.0, "clip_fraction": 0.0}
     num_updates = 0
     epochs_completed = 0
@@ -142,6 +140,7 @@ def update(
             )
             batch_old_log_probs = old_log_probs[batch_idx]
             batch_advantages = advantages[batch_idx]
+            batch_advantages = (batch_advantages - batch_advantages.mean()) / (batch_advantages.std(unbiased=False) + 1e-8)
             batch_old_values = old_values[batch_idx] if old_values is not None else None
 
             pol_loss = ppo_clip_loss(new_log_probs, batch_old_log_probs, batch_advantages, clip_ratio)

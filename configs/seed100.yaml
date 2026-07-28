@@ -1,4 +1,4 @@
-# 100M-step flat-terrain config based on successful cluster_20m_v2 hotfix parameters.
+# 200M Master Seed 100 Config designed to beat Brax baseline
 env_name: "Go1JoystickFlatTerrain"
 seed: 100
 seeds: [100]

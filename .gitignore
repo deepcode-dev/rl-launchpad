@@ -19,3 +19,5 @@ write-up/demo-assets/
 .DS_Store
 requirements_pinned.txt
 *.egg-info
+judge_explanation.md
+
