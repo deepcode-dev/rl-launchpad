@@ -16,7 +16,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from eval.evaluate import DEFAULT_EVAL_SEED, EVAL_EPISODES
+from eval.evaluate import DEFAULT_EVAL_SEED
 from eval.view_native import _actor_observation, _sensor
 
 
@@ -126,7 +126,7 @@ def main() -> None:
     print(f"Mean Episode Length:    {result['mean_episode_length']:.1f} steps")
     print(f"Linear Velocity Error:  {result['mean_lin_err']:.4f}")
     print(f"Yaw Rate Error:         {result['mean_yaw_err']:.4f} rad/s")
-    print("=======================================================================\n")
+    print("=======================================================\n")
 
 
 if __name__ == "__main__":
