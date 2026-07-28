@@ -117,44 +117,26 @@ def update(
     num_updates = 0
     epochs_completed = 0
     early_stopped = False
-    use_amp = observations.device.type == "cuda" and hasattr(torch.cuda, "is_bf16_supported") and torch.cuda.is_bf16_supported()
 
     for _ in range(epochs):
         epoch_kls = []
         indices = torch.randperm(dataset_size, device=observations.device)
         for start in range(0, dataset_size, batch_size):
             batch_idx = indices[start : start + batch_size]
-            if use_amp:
-                with torch.amp.autocast("cuda", dtype=torch.bfloat16):
-                    new_log_probs, entropy, values = agent.evaluate(
-                        observations[batch_idx],
-                        actions[batch_idx],
-                        critic_observations[batch_idx],
-                    )
-                    batch_old_log_probs = old_log_probs[batch_idx]
-                    batch_advantages = advantages[batch_idx]
-                    batch_advantages = (batch_advantages - batch_advantages.mean()) / (batch_advantages.std(unbiased=False) + 1e-8)
-                    batch_old_values = old_values[batch_idx] if old_values is not None else None
+            new_log_probs, entropy, values = agent.evaluate(
+                observations[batch_idx],
+                actions[batch_idx],
+                critic_observations[batch_idx],
+            )
+            batch_old_log_probs = old_log_probs[batch_idx]
+            batch_advantages = advantages[batch_idx]
+            batch_advantages = (batch_advantages - batch_advantages.mean()) / (batch_advantages.std(unbiased=False) + 1e-8)
+            batch_old_values = old_values[batch_idx] if old_values is not None else None
 
-                    pol_loss = ppo_clip_loss(new_log_probs, batch_old_log_probs, batch_advantages, clip_ratio)
-                    val_loss = value_loss(values, returns[batch_idx], old_values=batch_old_values, clip_ratio=clip_ratio)
-                    entropy_bonus = entropy.mean()
-                    total_loss = pol_loss + vf_coef * val_loss - ent_coef * entropy_bonus
-            else:
-                new_log_probs, entropy, values = agent.evaluate(
-                    observations[batch_idx],
-                    actions[batch_idx],
-                    critic_observations[batch_idx],
-                )
-                batch_old_log_probs = old_log_probs[batch_idx]
-                batch_advantages = advantages[batch_idx]
-                batch_advantages = (batch_advantages - batch_advantages.mean()) / (batch_advantages.std(unbiased=False) + 1e-8)
-                batch_old_values = old_values[batch_idx] if old_values is not None else None
-
-                pol_loss = ppo_clip_loss(new_log_probs, batch_old_log_probs, batch_advantages, clip_ratio)
-                val_loss = value_loss(values, returns[batch_idx], old_values=batch_old_values, clip_ratio=clip_ratio)
-                entropy_bonus = entropy.mean()
-                total_loss = pol_loss + vf_coef * val_loss - ent_coef * entropy_bonus
+            pol_loss = ppo_clip_loss(new_log_probs, batch_old_log_probs, batch_advantages, clip_ratio)
+            val_loss = value_loss(values, returns[batch_idx], old_values=batch_old_values, clip_ratio=clip_ratio)
+            entropy_bonus = entropy.mean()
+            total_loss = pol_loss + vf_coef * val_loss - ent_coef * entropy_bonus
 
             optimizer.zero_grad(set_to_none=True)
             if torch.isfinite(total_loss):
