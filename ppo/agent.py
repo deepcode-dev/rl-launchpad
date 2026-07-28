@@ -59,27 +59,49 @@ class ActorCritic(nn.Module):
         )
 
     def _normalize_observation(self, obs):
-        normalized = (obs - self.obs_mean) / torch.sqrt(self.obs_var + 1e-8)
+        clean_obs = torch.nan_to_num(
+            obs.to(device=self.obs_mean.device, dtype=self.obs_mean.dtype),
+            nan=0.0, posinf=10.0, neginf=-10.0
+        )
+        clean_var = torch.nan_to_num(self.obs_var, nan=1.0).clamp(min=1e-4, max=1e4)
+        clean_mean = torch.nan_to_num(self.obs_mean, nan=0.0)
+        normalized = (clean_obs - clean_mean) / torch.sqrt(clean_var + 1e-8)
         return normalized.clamp(-10.0, 10.0)
 
     def _normalize_critic_observation(self, obs):
-        normalized = (obs - self.critic_obs_mean) / torch.sqrt(self.critic_obs_var + 1e-8)
+        clean_obs = torch.nan_to_num(
+            obs.to(device=self.critic_obs_mean.device, dtype=self.critic_obs_mean.dtype),
+            nan=0.0, posinf=10.0, neginf=-10.0
+        )
+        clean_var = torch.nan_to_num(self.critic_obs_var, nan=1.0).clamp(min=1e-4, max=1e4)
+        clean_mean = torch.nan_to_num(self.critic_obs_mean, nan=0.0)
+        normalized = (clean_obs - clean_mean) / torch.sqrt(clean_var + 1e-8)
         return normalized.clamp(-10.0, 10.0)
 
     @staticmethod
     def _merge_observation_stats(observations, mean, var, count):
-        observations = observations.to(device=mean.device, dtype=mean.dtype)
-        batch_mean = observations.mean(dim=0)
-        batch_var = observations.var(dim=0, unbiased=False)
-        batch_count = torch.tensor(observations.shape[0], device=count.device, dtype=count.dtype)
-        delta = batch_mean - mean
-        total_count = count + batch_count
-        new_mean = mean + delta * batch_count / total_count
-        current_m2 = var * count
+        clean_obs = torch.nan_to_num(
+            observations.to(device=mean.device, dtype=mean.dtype),
+            nan=0.0, posinf=10.0, neginf=-10.0
+        ).clamp(-50.0, 50.0)
+        batch_mean = clean_obs.mean(dim=0)
+        batch_var = clean_obs.var(dim=0, unbiased=False)
+        batch_count = torch.tensor(clean_obs.shape[0], device=count.device, dtype=count.dtype)
+        
+        safe_mean = torch.nan_to_num(mean, nan=0.0)
+        safe_var = torch.nan_to_num(var, nan=1.0).clamp(min=1e-4, max=1e4)
+        safe_count = torch.nan_to_num(count, nan=1e-4).clamp(min=1e-4)
+
+        delta = batch_mean - safe_mean
+        total_count = safe_count + batch_count
+        new_mean = torch.nan_to_num(safe_mean + delta * batch_count / total_count, nan=0.0)
+        current_m2 = safe_var * safe_count
         batch_m2 = batch_var * batch_count
-        correction = delta.square() * count * batch_count / total_count
+        correction = delta.square() * safe_count * batch_count / total_count
+        new_var = torch.nan_to_num((current_m2 + batch_m2 + correction) / total_count, nan=1.0).clamp(min=1e-4, max=1e4)
+
         mean.copy_(new_mean)
-        var.copy_((current_m2 + batch_m2 + correction) / total_count)
+        var.copy_(new_var)
         count.copy_(total_count)
 
     @torch.no_grad()
@@ -107,7 +129,9 @@ class ActorCritic(nn.Module):
         )
 
     def _distribution(self, obs):
-        mean = self.actor(self._normalize_observation(obs))
+        norm_obs = self._normalize_observation(obs)
+        raw_mean = self.actor(norm_obs)
+        mean = torch.nan_to_num(raw_mean, nan=0.0, posinf=1.0, neginf=-1.0).clamp(-10.0, 10.0)
         log_std = torch.clamp(
             self.actor_log_std,
             min=self._LOG_STD_MIN,
@@ -129,9 +153,11 @@ class ActorCritic(nn.Module):
         log_prob = dist.log_prob(action).sum(dim=-1)
         entropy = dist.entropy().sum(dim=-1)
         critic_obs = obs if critic_obs is None else critic_obs
-        value = self.critic(self._normalize_critic_observation(critic_obs)).squeeze(-1)
+        raw_value = self.critic(self._normalize_critic_observation(critic_obs)).squeeze(-1)
+        value = torch.nan_to_num(raw_value, nan=0.0, posinf=100.0, neginf=-100.0)
         return log_prob, entropy, value
 
     def get_value(self, obs, critic_obs=None):
         critic_obs = obs if critic_obs is None else critic_obs
-        return self.critic(self._normalize_critic_observation(critic_obs)).squeeze(-1)
+        raw_value = self.critic(self._normalize_critic_observation(critic_obs)).squeeze(-1)
+        return torch.nan_to_num(raw_value, nan=0.0, posinf=100.0, neginf=-100.0)
