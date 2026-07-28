@@ -26,7 +26,9 @@ def save_checkpoint(
     total_env_steps, wall_time_seconds, critic_obs_dim=None, hidden_sizes=None,
 ):
     """Keep .pt compatible with existing evaluators and record its contract separately."""
-    torch.save(agent.state_dict(), path)
+    # Handle compiled models cleanly
+    uncompiled_agent = getattr(agent, "_orig_mod", agent)
+    torch.save(uncompiled_agent.state_dict(), path)
     metadata = {
         "checkpoint_format": "raw_state_dict",
         "algorithm": "PPO",
@@ -113,6 +115,7 @@ def train_single_seed(seed, config):
     ).to(device)
     initial_steps = 0
     resume_checkpoint = config.get("resume_checkpoint")
+    checkpoint_dir = config.get("checkpoint_dir", "checkpoints")
     if config.get("resume") and not resume_checkpoint:
         auto_ckpt = os.path.join(checkpoint_dir, f"ppo_seed{seed}.pt")
         if os.path.exists(auto_ckpt):
@@ -132,6 +135,14 @@ def train_single_seed(seed, config):
         else:
             initial_steps = 19988480
         print(f"Resumed policy weights from: {resume_checkpoint} (initial_steps={initial_steps:,})", flush=True)
+
+    if hasattr(torch, "compile") and device.type == "cuda" and config.get("compile", True):
+        try:
+            agent = torch.compile(agent)
+            print("🚀 PyTorch torch.compile() enabled for CUDA kernel fusion.", flush=True)
+        except Exception as e:
+            print(f"torch.compile skipped: {e}", flush=True)
+
     optimizer = torch.optim.Adam(agent.parameters(), lr=pi_lr)
 
     num_steps = steps_per_epoch // num_envs
@@ -278,7 +289,8 @@ def train_single_seed(seed, config):
             ent_coef=entropy_coefficient,
             target_kl=config.get("target_kl", 0.02),
         )
-        agent.update_observation_stats(obs_tensor, critic_obs_tensor)
+        uncompiled_agent = getattr(agent, "_orig_mod", agent)
+        uncompiled_agent.update_observation_stats(obs_tensor, critic_obs_tensor)
 
         total_time = time.time() - start_time
         avg_reward = float(np.mean(epoch_rewards))
@@ -304,8 +316,8 @@ def train_single_seed(seed, config):
         )
         history["action_stds"].append(
             float(
-                agent.actor_log_std.detach()
-                .clamp(agent._LOG_STD_MIN, agent._LOG_STD_MAX)
+                uncompiled_agent.actor_log_std.detach()
+                .clamp(uncompiled_agent._LOG_STD_MIN, uncompiled_agent._LOG_STD_MAX)
                 .exp()
                 .mean()
                 .item()
