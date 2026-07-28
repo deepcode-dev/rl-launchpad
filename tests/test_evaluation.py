@@ -18,7 +18,7 @@ def _write_checkpoint(tmp_path, metadata):
 
 def test_checkpoint_loader_requires_current_training_contract(tmp_path):
     path = _write_checkpoint(tmp_path, {})
-    with pytest.raises(ValueError, match="Legacy checkpoints"):
+    with pytest.raises(ValueError, match="missing the verified training contract"):
         load_actor_critic_checkpoint(
             path, env_name="Go1JoystickFlatTerrain", obs_dim=8, act_dim=3, hidden_dim=16
         )
