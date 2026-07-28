@@ -22,9 +22,8 @@ def _make_mlp(input_dim, hidden_sizes, output_dim, output_std):
 
 
 class ActorCritic(nn.Module):
-    """Actor-critic with a tanh-squashed Gaussian action distribution."""
+    """Actor-critic with a Gaussian with clipped actions."""
 
-    _ACTION_EPS = 1e-6
     _LOG_STD_MIN = -3.0
     _LOG_STD_MAX = 0.5
 
@@ -116,26 +115,17 @@ class ActorCritic(nn.Module):
         )
         return Normal(mean, log_std.exp().expand_as(mean))
 
-    def _squashed_log_prob(self, dist, pre_tanh_action, action):
-        # log pi(tanh(u)) = log pi(u) - sum(log |d tanh(u)/du|).
-        correction = torch.log(1.0 - action.square() + self._ACTION_EPS)
-        return (dist.log_prob(pre_tanh_action) - correction).sum(dim=-1)
-
     def get_action(self, obs, deterministic=False):
-        """Return an action in [-1, 1] and its squashed-distribution log-probability."""
+        """Return an action in [-1, 1] and its log-probability."""
         dist = self._distribution(obs)
-        pre_tanh_action = dist.mean if deterministic else dist.sample()
-        action = torch.tanh(pre_tanh_action)
-        return action, self._squashed_log_prob(dist, pre_tanh_action, action)
+        unclamped_action = dist.mean if deterministic else dist.sample()
+        action = unclamped_action.clamp(-1.0, 1.0)
+        return action, dist.log_prob(unclamped_action).sum(dim=-1)
 
     def evaluate(self, obs, action, critic_obs=None):
-        """Evaluate bounded actions under the same tanh-squashed distribution."""
+        """Evaluate bounded actions under the same Gaussian distribution."""
         dist = self._distribution(obs)
-        bounded_action = action.clamp(-1.0 + self._ACTION_EPS, 1.0 - self._ACTION_EPS)
-        pre_tanh_action = torch.atanh(bounded_action)
-        log_prob = self._squashed_log_prob(dist, pre_tanh_action, bounded_action)
-        # The transformed distribution has no simple closed-form entropy; this
-        # base-Gaussian entropy is a stable exploration regularizer.
+        log_prob = dist.log_prob(action).sum(dim=-1)
         entropy = dist.entropy().sum(dim=-1)
         critic_obs = obs if critic_obs is None else critic_obs
         value = self.critic(self._normalize_critic_observation(critic_obs)).squeeze(-1)
