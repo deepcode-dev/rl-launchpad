@@ -1,7 +1,7 @@
-# PPO v2 - Improved algorithm with Brax-matching initial entropy and decay
+# PPO v2 - Champion algorithm with fixed Brax-matching entropy (ent_coef: 0.01)
 env_name: "Go1JoystickFlatTerrain"
-seed: 20
-seeds: [20]
+seed: 2001
+seeds: [2001]
 num_envs: 8192
 history_len: 1
 episode_length: 1000
@@ -23,5 +23,5 @@ hidden_sizes: [512, 256, 128]
 vf_coef: 0.5
 initial_log_std: -1.0
 ent_coef: 0.01
-ent_coef_final: 0.001
+ent_coef_final: 0.01
 checkpoint_dir: "checkpoints/ppo_v2"

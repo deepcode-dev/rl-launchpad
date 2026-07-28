@@ -20,7 +20,7 @@ from ppo.agent import ActorCritic
 from ppo.ppo import TRAINING_CONTRACT
 
 DEFAULT_EVAL_SEED = 20000
-EVAL_EPISODES = 10
+EVAL_EPISODES = 50
 
 
 def load_config(config_path: str | Path = "configs/default.yaml") -> dict:
@@ -161,7 +161,7 @@ def evaluate_policy(
     checkpoint_path: str | Path,
     *,
     eval_seed: int = DEFAULT_EVAL_SEED,
-    num_episodes: int = 10,
+    num_episodes: int = 50,
     config_path: str | Path = "configs/default.yaml",
     output_path: str | Path | None = None,
 ) -> dict:
@@ -255,7 +255,7 @@ def evaluate_policy(
         episode_lengths.append(steps)
         episode_linear_velocity_errors.append(float(np.mean(lin_errs)))
         episode_yaw_rate_errors.append(float(np.mean(yaw_errs)))
-        if episode_index % 5 == 0 or episode_index == num_episodes:
+        if episode_index % 10 == 0 or episode_index == num_episodes:
             print(f"  [Native Eval] Episode {episode_index}/{num_episodes}: Return={total_reward:.4f}, Steps={steps}")
 
     results = {
@@ -296,7 +296,7 @@ def main() -> None:
     parser.add_argument("--checkpoint", required=True)
     parser.add_argument("--config", default="configs/default.yaml")
     parser.add_argument("--eval-seed", type=int, default=DEFAULT_EVAL_SEED)
-    parser.add_argument("--num-episodes", type=int, default=10)
+    parser.add_argument("--num-episodes", type=int, default=50)
     args = parser.parse_args()
 
     results = evaluate_policy(
@@ -307,7 +307,7 @@ def main() -> None:
     )
     print("\n=======================================================")
     print(f"  Evaluation Results: {args.checkpoint}")
-    print(f"  Mean Return: {results['mean_reward']:.4f} +/- {results['std_reward']:.4f}")
+    print(f"  50-Episode Mean Return: {results['mean_reward']:.4f} +/- {results['std_reward']:.4f}")
     print(f"  Lin Velocity Error: {results['mean_linear_velocity_error']:.4f} m/s")
     print(f"  Yaw Rate Error: {results['mean_yaw_rate_error']:.4f} rad/s")
     print(f"  Mean Steps: {results['mean_episode_length']:.1f}")

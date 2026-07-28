@@ -26,9 +26,7 @@ def save_checkpoint(
     total_env_steps, wall_time_seconds, critic_obs_dim=None, hidden_sizes=None,
 ):
     """Keep .pt compatible with existing evaluators and record its contract separately."""
-    # Handle compiled models cleanly
-    uncompiled_agent = getattr(agent, "_orig_mod", agent)
-    torch.save(uncompiled_agent.state_dict(), path)
+    torch.save(agent.state_dict(), path)
     metadata = {
         "checkpoint_format": "raw_state_dict",
         "algorithm": "PPO",
@@ -136,13 +134,6 @@ def train_single_seed(seed, config):
             initial_steps = 19988480
         print(f"Resumed policy weights from: {resume_checkpoint} (initial_steps={initial_steps:,})", flush=True)
 
-    if hasattr(torch, "compile") and device.type == "cuda" and config.get("compile", True):
-        try:
-            agent = torch.compile(agent)
-            print("🚀 PyTorch torch.compile() enabled for CUDA kernel fusion.", flush=True)
-        except Exception as e:
-            print(f"torch.compile skipped: {e}", flush=True)
-
     optimizer = torch.optim.Adam(agent.parameters(), lr=pi_lr)
 
     num_steps = steps_per_epoch // num_envs
@@ -187,8 +178,6 @@ def train_single_seed(seed, config):
     truncated_buffer = torch.empty((num_steps, num_envs), device=device, dtype=torch.bool)
     truncation_values_buffer = torch.empty((num_steps, num_envs), device=device)
 
-    learning_rate = pi_lr
-
     for epoch in range(1, epochs + 1):
         epoch_rewards = []
         epoch_linear_velocity_errors = []
@@ -197,14 +186,12 @@ def train_single_seed(seed, config):
         epoch_positive_reward_fractions = []
         epoch_termination_fractions = []
 
-        if epoch > 1:
-            last_kl = history["approx_kls"][-1]
-            target_kl = config.get("target_kl", 0.02)
-            if last_kl > target_kl * 2.0:
-                learning_rate = max(learning_rate / 1.5, 1e-5)
-            elif last_kl < target_kl / 2.0:
-                learning_rate = min(learning_rate * 1.5, pi_lr)
-        
+        if config.get("anneal_lr", False):
+            fraction = 1.0 - (epoch - 1.0) / epochs
+            learning_rate = pi_lr * fraction
+        else:
+            learning_rate = pi_lr
+
         for parameter_group in optimizer.param_groups:
             parameter_group["lr"] = learning_rate
 
@@ -289,8 +276,7 @@ def train_single_seed(seed, config):
             ent_coef=entropy_coefficient,
             target_kl=config.get("target_kl", 0.02),
         )
-        uncompiled_agent = getattr(agent, "_orig_mod", agent)
-        uncompiled_agent.update_observation_stats(obs_tensor, critic_obs_tensor)
+        agent.update_observation_stats(obs_tensor, critic_obs_tensor)
 
         total_time = time.time() - start_time
         avg_reward = float(np.mean(epoch_rewards))
@@ -316,8 +302,8 @@ def train_single_seed(seed, config):
         )
         history["action_stds"].append(
             float(
-                uncompiled_agent.actor_log_std.detach()
-                .clamp(uncompiled_agent._LOG_STD_MIN, uncompiled_agent._LOG_STD_MAX)
+                agent.actor_log_std.detach()
+                .clamp(agent._LOG_STD_MIN, agent._LOG_STD_MAX)
                 .exp()
                 .mean()
                 .item()
