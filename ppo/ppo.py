@@ -157,17 +157,19 @@ def update(
                 total_loss = pol_loss + vf_coef * val_loss - ent_coef * entropy_bonus
 
             optimizer.zero_grad(set_to_none=True)
-            total_loss.backward()
-            if max_grad_norm is not None:
-                torch.nn.utils.clip_grad_norm_(agent.parameters(), max_grad_norm)
-            optimizer.step()
+            if torch.isfinite(total_loss):
+                total_loss.backward()
+                if max_grad_norm is not None:
+                    torch.nn.utils.clip_grad_norm_(agent.parameters(), max_grad_norm)
+                optimizer.step()
 
             log_ratio = new_log_probs - batch_old_log_probs
             totals["policy_loss"] += pol_loss.item()
             totals["value_loss"] += val_loss.item()
             totals["entropy"] += entropy_bonus.item()
             ratio = log_ratio.exp()
-            approx_kl = ((ratio - 1.0) - log_ratio).mean().item()
+            # Standard numerically stable Schulman KL estimate
+            approx_kl = (batch_old_log_probs - new_log_probs).mean().abs().item()
             totals["approx_kl"] += approx_kl
             epoch_kls.append(approx_kl)
             totals["clip_fraction"] += ((ratio - 1.0).abs() > clip_ratio).float().mean().item()

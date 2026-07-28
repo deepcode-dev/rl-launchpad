@@ -113,7 +113,8 @@ class ActorCritic(nn.Module):
             min=self._LOG_STD_MIN,
             max=self._LOG_STD_MAX,
         )
-        return Normal(mean, log_std.exp().expand_as(mean))
+        std = torch.nan_to_num(log_std.exp(), nan=0.1, posinf=0.5, neginf=0.001).clamp(min=1e-3, max=1.0)
+        return Normal(mean, std.expand_as(mean))
 
     def get_action(self, obs, deterministic=False):
         """Return an action in [-1, 1] and its log-probability."""
