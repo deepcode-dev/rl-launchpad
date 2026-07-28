@@ -118,6 +118,8 @@ def update(
     epochs_completed = 0
     early_stopped = False
 
+    uncompiled_agent = getattr(agent, "_orig_mod", agent)
+
     for _ in range(epochs):
         epoch_kls = []
         indices = torch.randperm(dataset_size, device=observations.device)
@@ -141,9 +143,20 @@ def update(
             optimizer.zero_grad(set_to_none=True)
             if torch.isfinite(total_loss):
                 total_loss.backward()
-                if max_grad_norm is not None:
-                    torch.nn.utils.clip_grad_norm_(agent.parameters(), max_grad_norm)
-                optimizer.step()
+                # Safeguard: verify all gradients are finite before optimizer step
+                grads_ok = True
+                for p in agent.parameters():
+                    if p.grad is not None and not torch.isfinite(p.grad).all():
+                        grads_ok = False
+                        break
+                if grads_ok:
+                    if max_grad_norm is not None:
+                        torch.nn.utils.clip_grad_norm_(agent.parameters(), max_grad_norm)
+                    optimizer.step()
+
+            # Absolute Parameter Protection: Ensure actor_log_std parameter data is never NaN/Inf
+            with torch.no_grad():
+                uncompiled_agent.actor_log_std.nan_to_num_(nan=-1.0, posinf=0.5, neginf=-3.0).clamp_(-3.0, 0.5)
 
             log_ratio = new_log_probs - batch_old_log_probs
             totals["policy_loss"] += pol_loss.item()
