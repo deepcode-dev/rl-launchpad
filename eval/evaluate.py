@@ -20,6 +20,7 @@ from ppo.agent import ActorCritic
 from ppo.ppo import TRAINING_CONTRACT
 
 DEFAULT_EVAL_SEED = 20000
+EVAL_EPISODES = 10
 
 
 def load_config(config_path: str | Path = "configs/default.yaml") -> dict:
@@ -76,6 +77,10 @@ def load_actor_critic_checkpoint(
             f"Checkpoint {checkpoint_path} is missing the verified training contract "
             f"{TRAINING_CONTRACT!r}. Retrain with the current code."
         )
+    saved_env_name = metadata.get("env_name")
+    if saved_env_name and saved_env_name != env_name:
+        raise ValueError(f"Checkpoint env_name {saved_env_name!r} does not match requested env_name {env_name!r}.")
+
     obs_dim = int(metadata.get("obs_dim", metadata.get("observation_dim", obs_dim)))
     act_dim = int(metadata.get("act_dim", metadata.get("action_dim", act_dim)))
     hidden_dim = int(metadata.get("hidden_dim", hidden_dim))
