@@ -29,16 +29,26 @@ def record_demo_video(
     height: int = 720,
 ) -> dict:
     """Render one deterministic episode and return its measured rollout facts."""
+    ckpt_data = torch.load(checkpoint_path, map_location="cpu")
+    meta = ckpt_data.get("metadata", {})
+    ckpt_config = meta.get("config", {})
+    
     config = load_config()
-    env_name = config["env_name"]
+    history_len = int(ckpt_config.get("history_len", meta.get("history_len", config.get("history_len", 1))))
+    hidden_dim = int(ckpt_config.get("hidden_dim", meta.get("hidden_dim", config.get("hidden_dim", 512))))
+    hidden_sizes = ckpt_config.get("hidden_sizes", meta.get("hidden_sizes", config.get("hidden_sizes", (512, 256, 128))))
+    if isinstance(hidden_sizes, list):
+        hidden_sizes = tuple(hidden_sizes)
+
+    env_name = ckpt_config.get("env_name", config.get("env_name", "Go1JoystickFlatTerrain"))
     env = MJXVectorPyTorchWrapper(
         env_name, num_envs=1, seed=seed,
-        history_len=config.get("history_len", 5),
+        history_len=history_len,
         episode_length=config.get("episode_length", 1000),
     )
     agent, _ = load_actor_critic_checkpoint(
         checkpoint_path, env_name=env_name, obs_dim=env.observation_dim,
-        act_dim=env.action_dim, hidden_dim=config.get("hidden_dim", 256),
+        act_dim=env.action_dim, hidden_dim=hidden_dim, hidden_sizes=hidden_sizes,
     )
     obs, _ = env.reset(seed=seed)
 
@@ -49,7 +59,7 @@ def record_demo_video(
     episode_return = 0.0
 
     try:
-        for _ in range(max_steps):
+        for step_i in range(max_steps):
             with torch.no_grad():
                 action, _ = agent.get_action(obs, deterministic=True)
             obs, reward, terminated, truncated, _ = env.step(action)
