@@ -113,7 +113,6 @@ def train_single_seed(seed, config):
     ).to(device)
     initial_steps = 0
     resume_checkpoint = config.get("resume_checkpoint")
-    checkpoint_dir = config.get("checkpoint_dir", "checkpoints")
     if config.get("resume") and not resume_checkpoint:
         auto_ckpt = os.path.join(checkpoint_dir, f"ppo_seed{seed}.pt")
         if os.path.exists(auto_ckpt):
@@ -133,7 +132,6 @@ def train_single_seed(seed, config):
         else:
             initial_steps = 19988480
         print(f"Resumed policy weights from: {resume_checkpoint} (initial_steps={initial_steps:,})", flush=True)
-
     optimizer = torch.optim.Adam(agent.parameters(), lr=pi_lr)
 
     num_steps = steps_per_epoch // num_envs
@@ -178,6 +176,8 @@ def train_single_seed(seed, config):
     truncated_buffer = torch.empty((num_steps, num_envs), device=device, dtype=torch.bool)
     truncation_values_buffer = torch.empty((num_steps, num_envs), device=device)
 
+    learning_rate = pi_lr
+
     for epoch in range(1, epochs + 1):
         epoch_rewards = []
         epoch_linear_velocity_errors = []
@@ -186,12 +186,14 @@ def train_single_seed(seed, config):
         epoch_positive_reward_fractions = []
         epoch_termination_fractions = []
 
-        if config.get("anneal_lr", False):
-            fraction = 1.0 - (epoch - 1.0) / epochs
-            learning_rate = pi_lr * fraction
-        else:
-            learning_rate = pi_lr
-
+        if epoch > 1:
+            last_kl = history["approx_kls"][-1]
+            target_kl = config.get("target_kl", 0.02)
+            if last_kl > target_kl * 2.0:
+                learning_rate = max(learning_rate / 1.5, 1e-5)
+            elif last_kl < target_kl / 2.0:
+                learning_rate = min(learning_rate * 1.5, pi_lr)
+        
         for parameter_group in optimizer.param_groups:
             parameter_group["lr"] = learning_rate
 
