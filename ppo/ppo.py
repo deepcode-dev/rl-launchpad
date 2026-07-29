@@ -154,9 +154,9 @@ def update(
                         torch.nn.utils.clip_grad_norm_(agent.parameters(), max_grad_norm)
                     optimizer.step()
 
-            # Absolute Parameter Protection: Ensure actor_log_std parameter data is never NaN/Inf
+            # Absolute Parameter Protection: Ensure actor_log_std parameter data never drops below -1.2 (sigma >= 0.301)
             with torch.no_grad():
-                uncompiled_agent.actor_log_std.nan_to_num_(nan=-1.0, posinf=0.5, neginf=-3.0).clamp_(-3.0, 0.5)
+                uncompiled_agent.actor_log_std.nan_to_num_(nan=-1.0, posinf=0.5, neginf=-1.2).clamp_(-1.2, 0.5)
 
             log_ratio = new_log_probs - batch_old_log_probs
             totals["policy_loss"] += pol_loss.item()
