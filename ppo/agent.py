@@ -22,7 +22,7 @@ def _make_mlp(input_dim, hidden_sizes, output_dim, output_std):
 
 
 class ActorCritic(nn.Module):
-    """Actor-critic with a Gaussian with clipped actions (Exact Seed 2001 Recipe)."""
+    """Actor-critic with a Gaussian with clipped actions."""
 
     _LOG_STD_MIN = -3.0
     _LOG_STD_MAX = 0.5
@@ -140,14 +140,14 @@ class ActorCritic(nn.Module):
         return Normal(mean, log_std.exp().expand_as(mean))
 
     def get_action(self, obs, deterministic=False):
-        """Return an action in [-1, 1] and its log-probability (Exact Seed 2001 Recipe)."""
+        """Return an action in [-1, 1] and its log-probability."""
         dist = self._distribution(obs)
         unclamped_action = dist.mean if deterministic else dist.sample()
         action = unclamped_action.clamp(-1.0, 1.0)
-        return action, dist.log_prob(unclamped_action).sum(dim=-1)
+        return action, dist.log_prob(action).sum(dim=-1)
 
     def evaluate(self, obs, action, critic_obs=None):
-        """Evaluate bounded actions under the same Gaussian distribution (Exact Seed 2001 Recipe)."""
+        """Evaluate bounded actions under the same Gaussian distribution."""
         dist = self._distribution(obs)
         log_prob = dist.log_prob(action).sum(dim=-1)
         entropy = dist.entropy().sum(dim=-1)
