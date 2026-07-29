@@ -2,21 +2,24 @@
 env_name: "Go1JoystickFlatTerrain"
 seed: 10
 seeds: [10, 20, 30]
-num_envs: 128
+num_envs: 8192
 history_len: 1
 episode_length: 1000
-steps_per_epoch: 16384
-epochs: 20
-total_timesteps_per_seed: 327680    # early stop selected on the 10,000-series validation block
-total_timesteps: 983040             # 3 seeds * 327680 steps/seed
-gamma: 0.99
+steps_per_epoch: 163840
+epochs: 1220
+total_timesteps_per_seed: 199884800
+total_timesteps: 599654400          # 3 seeds * ~200M steps/seed
+gamma: 0.97
 lam: 0.95
 clip_ratio: 0.2
 pi_lr: 0.0003
-max_grad_norm: 0.5
+target_kl: 0.02
+max_grad_norm: 1.0
 train_iters: 4
 batch_size: 5120
 hidden_dim: 512
+hidden_sizes: [512, 256, 128]
 vf_coef: 0.5
+initial_log_std: -1.0
 ent_coef: 0.01
-baseline_n_steps: 128              # 128 envs * 128 steps = custom rollout size
+ent_coef_final: 0.01
