@@ -163,8 +163,8 @@ def update(
             totals["value_loss"] += val_loss.item()
             totals["entropy"] += entropy_bonus.item()
             ratio = log_ratio.exp()
-            # Standard numerically stable Schulman KL estimate
-            approx_kl = (batch_old_log_probs - new_log_probs).mean().abs().item()
+            # Schulman k3 non-canceable sample-level KL estimator: 0.5 * mean((old_log - new_log)^2)
+            approx_kl = 0.5 * (batch_old_log_probs - new_log_probs).square().mean().item()
             totals["approx_kl"] += approx_kl
             epoch_kls.append(approx_kl)
             totals["clip_fraction"] += ((ratio - 1.0).abs() > clip_ratio).float().mean().item()
