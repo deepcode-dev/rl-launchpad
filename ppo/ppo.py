@@ -154,17 +154,17 @@ def update(
                         torch.nn.utils.clip_grad_norm_(agent.parameters(), max_grad_norm)
                     optimizer.step()
 
-            # Absolute Parameter Protection: Ensure actor_log_std parameter data never drops below -1.2 (sigma >= 0.301)
+            # Absolute Parameter Protection: Ensure actor_log_std parameter data stays valid
             with torch.no_grad():
-                uncompiled_agent.actor_log_std.nan_to_num_(nan=-1.0, posinf=0.5, neginf=-1.2).clamp_(-1.2, 0.5)
+                uncompiled_agent.actor_log_std.nan_to_num_(nan=-1.0, posinf=0.5, neginf=-3.0).clamp_(-3.0, 0.5)
 
             log_ratio = new_log_probs - batch_old_log_probs
             totals["policy_loss"] += pol_loss.item()
             totals["value_loss"] += val_loss.item()
             totals["entropy"] += entropy_bonus.item()
             ratio = log_ratio.exp()
-            # Schulman k3 non-canceable sample-level KL estimator: 0.5 * mean((old_log - new_log)^2)
-            approx_kl = 0.5 * (batch_old_log_probs - new_log_probs).square().mean().item()
+            # Exact Seed 2001 Schulman KL estimator: ((ratio - 1.0) - log_ratio).mean()
+            approx_kl = ((ratio - 1.0) - log_ratio).mean().item()
             totals["approx_kl"] += approx_kl
             epoch_kls.append(approx_kl)
             totals["clip_fraction"] += ((ratio - 1.0).abs() > clip_ratio).float().mean().item()
