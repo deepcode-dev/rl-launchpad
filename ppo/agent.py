@@ -144,7 +144,7 @@ class ActorCritic(nn.Module):
         dist = self._distribution(obs)
         unclamped_action = dist.mean if deterministic else dist.sample()
         action = unclamped_action.clamp(-1.0, 1.0)
-        return action, dist.log_prob(action).sum(dim=-1)
+        return action, dist.log_prob(unclamped_action).sum(dim=-1)
 
     def evaluate(self, obs, action, critic_obs=None):
         """Evaluate bounded actions under the same Gaussian distribution."""
