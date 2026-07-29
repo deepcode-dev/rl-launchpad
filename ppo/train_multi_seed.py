@@ -31,7 +31,7 @@ def save_checkpoint(
         "checkpoint_format": "raw_state_dict",
         "algorithm": "PPO",
         "training_contract": TRAINING_CONTRACT,
-        "policy_distribution": "clipped_normal",
+        "policy_distribution": "tanh_squashed_normal",
         "observation_normalization": "running_mean_variance",
         "reward_source": "mujoco_playground_state_reward",
         "physics_backend": "jax",
