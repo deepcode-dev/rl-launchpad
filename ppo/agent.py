@@ -24,7 +24,7 @@ def _make_mlp(input_dim, hidden_sizes, output_dim, output_std):
 class ActorCritic(nn.Module):
     """Actor-critic with a Gaussian with clipped actions."""
 
-    _LOG_STD_MIN = -3.0
+    _LOG_STD_MIN = -1.2
     _LOG_STD_MAX = 0.5
 
     def __init__(
@@ -137,7 +137,7 @@ class ActorCritic(nn.Module):
             min=self._LOG_STD_MIN,
             max=self._LOG_STD_MAX,
         )
-        std = torch.nan_to_num(log_std.exp(), nan=0.1, posinf=0.5, neginf=0.001).clamp(min=1e-3, max=1.0)
+        std = torch.nan_to_num(log_std.exp(), nan=0.1, posinf=0.5, neginf=0.301).clamp(min=0.301, max=1.0)
         return Normal(mean, std.expand_as(mean))
 
     def get_action(self, obs, deterministic=False):
