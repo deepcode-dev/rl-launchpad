@@ -56,9 +56,10 @@ Training seeds were evaluated with **200,000,000 environment steps per seed** tr
 | Agent / Model | Environment Steps | Wall Time | Lin. Vel. Error (`LinErr`) | Yaw Rate Error (`YawErr`) | Mean Return (50 Ep.) | Fall Rate (`Done`) |
 |---|---:|---:|---:|---:|---:|---:|
 | **Brax PPO Baseline (200M)** | 200,000,000 | 595.0 s | **0.0645** | **0.0481 rad/s** | **19.83 ± 0.09** | **0.00%** |
+| 🥇 **Custom PyTorch PPO (Seed 9016)** 🏆 | 200,000,000 | 13,100.0 s | **0.0863** | **0.0675 rad/s** | **19.76 ± 0.11** | **0.00%** |
+| 🥇 **Custom PyTorch PPO (Seed 8009)** 🏆 | 200,000,000 | 13,100.0 s | **0.0873** | **0.0698 rad/s** | **19.76 ± 0.11** | **0.00%** |
+| 🥇 **Custom PyTorch PPO (Seed 9006)** 🏆 | 200,000,000 | 13,100.0 s | **0.0853** | **0.0702 rad/s** | **19.74 ± 0.16** | **0.00%** |
 | 🥇 **Custom PyTorch PPO (Seed 2005)** 🏆 | 200,000,000 | 14,786.0 s | **0.1160** | **0.0715 rad/s** | **19.61 ± 0.23** | **0.00%** |
-| 🥇 **Custom PyTorch PPO (Seed 2001)** 🏆 | 200,000,000 | 14,760.0 s | **0.1145** | **0.0772 rad/s** | **19.60 ± 0.21** | **0.00%** |
-| 🥇 **Custom PyTorch PPO (Seed 20)** 🏆 | 200,000,000 | 13,043.5 s | **0.0980** | **0.0623 rad/s** | **19.71 ± 0.21** | **0.00%** |
 
 ![Measured training and evaluation comparison](benchmark_comparison.png)
 
