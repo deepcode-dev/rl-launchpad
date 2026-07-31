@@ -93,7 +93,7 @@ $$L_{\text{entropy}} = \mathbb{E}_t \left[ \sum_{i=1}^{12} \left( \ln(\sigma_i \
 ## 📊 SUMMARY OF RULES R2–R6 COMPLIANCE
 
 ### R2: Baseline Comparison
-* **Brax 200M PPO Baseline**: Mean Return **`19.83 ± 0.09`** | `LinErr`: **`0.0645 m/s`**
+* **Brax 200M PPO Baseline** (mean over seeds 10/11/12, 50 fixed episodes each): Mean Return **`19.82 ± 0.02`** | `LinErr`: **`0.0668 m/s`** | `YawErr`: **`0.0454 rad/s`**
 * **Our From-Scratch PyTorch PPO (Seed 9033)**: Mean Return **`19.78 ± 0.13`** | `LinErr`: **`0.0812 m/s`** (99.7% of baseline reward)
 * **Grand mean over 5 champion seeds (9033, 9006, 9018, 9016, 8009)**: **`19.75`**, LinErr **`0.0851 m/s`**, 0.00% fall rate
 

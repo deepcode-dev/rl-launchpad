@@ -4,7 +4,7 @@ A from-scratch PyTorch PPO agent for `Go1JoystickFlatTerrain` in MuJoCo Playgrou
 
 The implementation features 8,192 parallel vector environment integration via `MJXVectorPyTorchWrapper`, 512-256-128 separate Actor-Critic MLPs, active policy entropy exploration (`ent_coef: 0.01`, `initial_log_std: -1.0`), running observation normalization, 0.7/0.3 low-pass EMA action filtering, 123-dim asymmetric privileged critic ($V(s)$ with terrain heightmaps & contact forces), and Generalized Advantage Estimation ($\text{GAE}(\gamma=0.97, \lambda=0.95)$).
 
-Our 200M Custom PyTorch PPO agent achieves near-parity with Google DeepMind's 200M Brax PPO baseline across every evaluation metric: **LinErr 0.0853 m/s** (vs 0.0645), **YawErr 0.0621 rad/s** (vs 0.0481), **Mean Return 19.76 ± 0.11** (vs 19.83), and **0.00% Fall Rate**.
+Our 200M Custom PyTorch PPO agent achieves near-parity with Google DeepMind's 200M Brax PPO baseline across every evaluation metric: **LinErr 0.0853 m/s** (vs 0.0668), **YawErr 0.0621 rad/s** (vs 0.0454), **Mean Return 19.76 ± 0.11** (vs 19.82), and **0.00% Fall Rate**.
 
 ---
 
@@ -34,11 +34,13 @@ Every checkpoint is evaluated over 50 fixed, disjoint benchmark evaluation episo
 
 | Agent / Model | Environment Steps | Wall Time | Lin. Vel. Error (`LinErr`) | Yaw Rate Error (`YawErr`) | Mean Return (50 Ep.) | Fall Rate (`Done`) |
 |---|---:|---:|---:|---:|---:|---:|
-| **Brax PPO Baseline (200M)** | 200,000,000 | 595.0 s | **0.0645 m/s** | **0.0481 rad/s** | **19.83 ± 0.09** | **0.00%** |
+| **Brax PPO Baseline (200M, 3-seed mean)** | 200,000,000 | 589.3 s | **0.0668 m/s** | **0.0454 rad/s** | **19.82 ± 0.02** | **0.00%** |
 | 🥇 **Custom PyTorch PPO (Seed 9016)** 🏆 | 200,000,000 | 13,100.0 s | **0.0863 m/s** | **0.0675 rad/s** | **19.76 ± 0.11** | **0.00%** |
 | 🥇 **Custom PyTorch PPO (Seed 8009)** 🏆 | 200,000,000 | 13,100.0 s | **0.0873 m/s** | **0.0698 rad/s** | **19.76 ± 0.11** | **0.00%** |
 | 🥇 **Custom PyTorch PPO (Seed 9006)** 🏆 | 200,000,000 | 13,100.0 s | **0.0853 m/s** | **0.0702 rad/s** | **19.74 ± 0.16** | **0.00%** |
 | 🥇 **Custom PyTorch PPO (Seed 2005)** 🏆 | 200,000,000 | 14,786.0 s | **0.1160 m/s** | **0.0715 rad/s** | **19.61 ± 0.23** | **0.00%** |
+
+_Brax baseline is the mean over seeds 10, 11, and 12 (50 fixed episodes each); ± is the standard deviation of the three per-seed means. Seed-level results: seed 10 → 19.83 ± 0.09, seed 11 → 19.80 ± 0.12, seed 12 → 19.84 ± 0.10._
 
 ---
 
