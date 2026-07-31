@@ -1,0 +1,9 @@
+{
+  "checkpoint": "checkpoints\\brax_go1_200m_seed11\\000200540160",
+  "num_episodes": 50,
+  "mean_reward": 19.798460699210608,
+  "std_reward": 0.1196873781365024,
+  "mean_episode_length": 1000.0,
+  "mean_lin_err": 0.07388805584615485,
+  "mean_yaw_err": 0.0437359535152509
+}
