@@ -94,6 +94,10 @@ $$L_{\text{entropy}} = \mathbb{E}_t \left[ \sum_{i=1}^{12} \left( \ln(\sigma_i \
 
 ### R2: Baseline Comparison
 * **Brax 200M PPO Baseline** (mean over seeds 10/11/12, 50 fixed episodes each): Mean Return **`19.82 ± 0.02`** | `LinErr`: **`0.0668 m/s`** | `YawErr`: **`0.0454 rad/s`**
+* **Baseline checkpoints** live in `baselines/brax_go1_200m{,_seed11,_seed12}`; re-evaluate any seed with:
+  ```bash
+  uv run python eval/eval_brax_seeds.py --checkpoint-dir baselines/brax_go1_200m_seed12
+  ```
 * **Our From-Scratch PyTorch PPO (Seed 9033)**: Mean Return **`19.78 ± 0.13`** | `LinErr`: **`0.0812 m/s`** (99.7% of baseline reward)
 * **Grand mean over 5 champion seeds (9033, 9006, 9018, 9016, 8009)**: **`19.75`**, LinErr **`0.0851 m/s`**, 0.00% fall rate
 
