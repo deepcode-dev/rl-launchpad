@@ -13,6 +13,45 @@ import numpy as np
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
+def load_summary(path: str | Path, expected_protocol: str) -> dict:
+    """Load and validate a recorded multi-seed evaluation summary."""
+    path = Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(f"Required evaluation summary is missing: {path}")
+    try:
+        summary = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise ValueError(f"Invalid JSON in {path}: {error}") from error
+    if summary.get("protocol") != expected_protocol:
+        raise ValueError(
+            f"{path} uses protocol {summary.get('protocol')!r}, expected {expected_protocol!r}. "
+            "Do not compare differently shaped rewards or evaluation procedures."
+        )
+    required = {"grand_mean_return", "grand_std_return", "mean_episode_length", "num_episodes_per_seed"}
+    missing = sorted(required.difference(summary))
+    if missing:
+        raise ValueError(f"{path} is not a complete evaluation summary; missing {missing}")
+    return summary
+
+
+def load_training_histories(path: str | Path) -> list[dict]:
+    """Load measured per-seed training points; never synthesize missing curves."""
+    path = Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(f"Required training history is missing: {path}")
+    histories = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(histories, list) or len(histories) < 3:
+        raise ValueError(f"{path} must contain at least three training-seed histories")
+    for history in histories:
+        steps = history.get("total_steps")
+        rewards = history.get("mean_step_rewards", history.get("rewards"))
+        if not steps or not rewards or len(steps) != len(rewards):
+            raise ValueError(f"Incomplete measured training history in {path}")
+        if any(right <= left for left, right in zip(steps, steps[1:])):
+            raise ValueError(f"Training steps must be strictly increasing in {path}")
+    return histories
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Plot recorded native-reward custom/Brax benchmark results.")
     parser.add_argument(
