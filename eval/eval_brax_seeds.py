@@ -1,5 +1,6 @@
 """Evaluate Brax 200M PPO baseline checkpoints for Rule R2 compliance."""
 
+import argparse
 import json
 from pathlib import Path
 import sys
@@ -105,7 +106,16 @@ def evaluate_brax_checkpoint(ckpt_path: Path, eval_seed: int = DEFAULT_EVAL_SEED
 
 
 def main() -> None:
-    brax_dir = PROJECT_ROOT / "checkpoints" / "brax_go1_200m"
+    parser = argparse.ArgumentParser(description="Evaluate Brax 200M PPO baseline checkpoints.")
+    parser.add_argument(
+        "--checkpoint-dir",
+        type=Path,
+        default=PROJECT_ROOT / "baselines" / "brax_go1_200m",
+        help="Directory containing Brax step checkpoints (default: baselines/brax_go1_200m).",
+    )
+    args = parser.parse_args()
+
+    brax_dir = args.checkpoint_dir
     if not brax_dir.exists():
         raise FileNotFoundError(f"Brax checkpoint directory not found: {brax_dir}")
 
