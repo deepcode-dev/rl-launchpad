@@ -12,4 +12,4 @@
 - Autoreset: each vector slot restores its cached randomized initial state while returning the terminal transition's flags and final policy observation
 - Physics implementation: MuJoCo MJX's JAX backend is selected explicitly; no platform-dependent default backend is used
 
-The wrapper is implemented in `ppo/env.py`. Environment changes relative to stock are limited to the training wrapper's episode/autoreset mechanics and configurable observation history. Reward scales are not modified.
+The wrapper is implemented in `ppo/env.py`. Environment changes relative to stock are limited to the training wrapper's episode/autoreset mechanics, configurable observation history, normalized action bounds, and the submitted policy's 0.7/0.3 EMA action post-processing. Reward scales are not modified during training. The final native evaluator reports a separate shared command-tracking metric for custom and Brax comparison.
