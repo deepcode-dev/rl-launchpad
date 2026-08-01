@@ -44,10 +44,17 @@ NEW_checkpoints/ppo_v2/ppo_seed90*
 # Scratch output artifacts
 scratch/*.log
 scratch/*.txt
+.pytest_tmp*/
+write-up/demo-evidence-preview.png
+
+# Canonical RL-track evidence and demo assets
+!baselines/brax_go1_200m_eval_summary.json
+!baselines/brax_go1_200m_ema_ablation.json
+!write-up/demo.mp4
+!write-up/policy-footage.mp4
 
 # One-off scratch scripts (not referenced by docs; build_ppo_v2_summary.py is kept)
 scratch/eval_9000_seeds.py
 scratch/fix_plot_200m.py
 scratch/plot_champion_benchmark.py
 scratch/sync_new_checkpoints.py
-
