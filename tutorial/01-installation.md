@@ -4,7 +4,7 @@
 
 ```powershell
 uv sync --extra dev --locked
-uv run pytest -q          # unit + contract tests
+uv run pytest -q --basetemp=.pytest_tmp -p no:cacheprovider   # unit + contract tests
 ```
 
 - Python is pinned to `>=3.12,<3.13` in `pyproject.toml`.
@@ -19,10 +19,9 @@ Smoke-test that physics + both ML stacks are importable:
 uv run python -c "import brax, jax, mujoco_playground as mp; import torch; print('ok', torch.cuda.is_available())"
 ```
 
-> If `uv run pytest -q` fails with `PermissionError: [WinError 5]` while creating
-> `.pytest_cache/` or the `tmp_path` fixture (sandboxed Windows environments),
-> redirect the caches to a writable folder:
-> `uv run pytest -q -p no:cacheprovider --basetemp="$env:TEMP\opencode\pytest-tmp"`.
+> The pytest flags above (`--basetemp=.pytest_tmp -p no:cacheprovider`) redirect pytest's
+> temp dirs and cache out of `%TEMP%`/`.pytest_cache`, which sandboxed Windows environments
+> leave with restricted ACLs that raise `PermissionError: [WinError 5]` during test setup.
 
 ## Cluster (NUS SoC, `xlogin`)
 

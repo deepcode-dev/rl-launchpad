@@ -1,0 +1,27 @@
+# Archived experiment: 131k High-Throughput Config (fast wall time, poor policy)
+env_name: "Go1JoystickFlatTerrain"
+seed: 10001
+seeds: [10001]
+num_envs: 131072
+history_len: 1
+episode_length: 1000
+steps_per_epoch: 1310720    # 10 rollout steps per env => 152 epochs total
+epochs: 152                 # 152 epochs * 1.31M = 200M total timesteps
+total_timesteps_per_seed: 199229440
+total_timesteps: 199229440
+gamma: 0.97
+lam: 0.95
+clip_ratio: 0.2
+pi_lr: 0.0004
+anneal_lr: false
+target_kl: 0.02
+max_grad_norm: 1.0
+train_iters: 8             # Experimental setting; final champion uses 4
+batch_size: 40960          # Experimental setting; final champion uses 5120
+hidden_dim: 512
+hidden_sizes: [512, 256, 128]
+vf_coef: 0.5
+initial_log_std: -1.0
+ent_coef: 0.01
+ent_coef_final: 0.01
+checkpoint_dir: "checkpoints/ppo_v2"

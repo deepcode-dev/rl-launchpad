@@ -2,9 +2,9 @@
 
 A from-scratch PyTorch PPO agent for `Go1JoystickFlatTerrain` in MuJoCo Playground (MJX), built for the Launchpad 2026 Griffin Labs RL track. Rule R2 baseline comparison uses official Brax PPO.
 
-The implementation features 8,192 parallel vector environment integration via `MJXVectorPyTorchWrapper`, 512-256-128 separate Actor-Critic MLPs, active policy entropy exploration (`ent_coef: 0.01`, `initial_log_std: -1.0`), running observation normalization, 0.7/0.3 low-pass EMA action filtering, 123-dim asymmetric privileged critic ($V(s)$ with terrain heightmaps & contact forces), and Generalized Advantage Estimation ($\text{GAE}(\gamma=0.97, \lambda=0.95)$).
+The implementation features 8,192 parallel vector environment integration via `MJXVectorPyTorchWrapper`, 512-256-128 separate Actor-Critic MLPs with SiLU activations, active policy entropy exploration (`ent_coef: 0.01`, `initial_log_std: -1.0`), running observation normalization, 0.7/0.3 low-pass EMA action filtering, a 123-dim asymmetric privileged critic, and Generalized Advantage Estimation with `GAE(gamma=0.97, lambda=0.95)`.
 
-Our 200M Custom PyTorch PPO agent achieves near-parity with Google DeepMind's 200M Brax PPO baseline across every evaluation metric: **LinErr 0.0853 m/s** (vs 0.0668), **YawErr 0.0621 rad/s** (vs 0.0454), **Mean Return 19.76 ± 0.11** (vs 19.82), and **0.00% Fall Rate**.
+Across five independent 200M-step seeds, the custom agent reaches **19.752 ± 0.020** mean command-tracking return, **0.0851 m/s** LinErr, **0.0676 rad/s** YawErr, and 1,000-step episodes. The three-seed 200M Brax reference reaches **19.821 ± 0.016**, **0.0668 m/s**, and **0.0454 rad/s**. These are deterministic native-MuJoCo evaluations using the shared command-tracking metric; training itself uses the stock `state.reward`.
 
 ---
 
@@ -20,10 +20,10 @@ uv sync --extra dev --locked
 uv run pytest -q --basetemp=.pytest_tmp -p no:cacheprovider
 
 # 3. Evaluate top champion policy checkpoint (50 fixed benchmark episodes)
-uv run python eval/evaluate.py --checkpoint NEW_checkpoints/ppo_v2/ppo_seed9016.pt
+uv run python eval/evaluate.py --checkpoint NEW_checkpoints/ppo_v2/ppo_seed9033.pt
 
-# 4. Drive the trained policy live in 3D (W/A/S/D, Q/E, 1/2/3/4 speed presets):
-uv run python eval/view_native_v2.py NEW_checkpoints/ppo_v2/ppo_seed9016.pt
+# 4. Drive the trained policy live in 3D (W/A/S/D or arrow keys, Q/E, 1/2/3/4 presets):
+uv run python eval/view_native_v2.py NEW_checkpoints/ppo_v2/ppo_seed9033.pt
 ```
 
 ---
@@ -34,13 +34,10 @@ Every checkpoint is evaluated over 50 fixed, disjoint benchmark evaluation episo
 
 | Agent / Model | Environment Steps | Wall Time | Lin. Vel. Error (`LinErr`) | Yaw Rate Error (`YawErr`) | Mean Return (50 Ep.) | Fall Rate (`Done`) |
 |---|---:|---:|---:|---:|---:|---:|
-| **Brax PPO Baseline (200M, 3-seed mean)** | 200,000,000 | 589.3 s | **0.0668 m/s** | **0.0454 rad/s** | **19.82 ± 0.02** | **0.00%** |
-| 🥇 **Custom PyTorch PPO (Seed 9016)** 🏆 | 200,000,000 | 13,100.0 s | **0.0863 m/s** | **0.0675 rad/s** | **19.76 ± 0.11** | **0.00%** |
-| 🥇 **Custom PyTorch PPO (Seed 8009)** 🏆 | 200,000,000 | 13,100.0 s | **0.0873 m/s** | **0.0698 rad/s** | **19.76 ± 0.11** | **0.00%** |
-| 🥇 **Custom PyTorch PPO (Seed 9006)** 🏆 | 200,000,000 | 13,100.0 s | **0.0853 m/s** | **0.0702 rad/s** | **19.74 ± 0.16** | **0.00%** |
-| 🥇 **Custom PyTorch PPO (Seed 2005)** 🏆 | 200,000,000 | 14,786.0 s | **0.1160 m/s** | **0.0715 rad/s** | **19.61 ± 0.23** | **0.00%** |
+| **Brax PPO Baseline (200M, seeds 10/11/12)** | 200,000,000 | documented 589.3 s | **0.0668 m/s** | **0.0454 rad/s** | **19.821 ± 0.016** | **0.00%** |
+| **Custom PyTorch PPO (seeds 9033/9006/9018/9016/8009)** | 199,884,800 | 13,434–13,872 s; mean 13,561 s | **0.0851 m/s** | **0.0676 rad/s** | **19.752 ± 0.020** | **0.00%** |
 
-_Brax baseline is the mean over seeds 10, 11, and 12 (50 fixed episodes each); ± is the standard deviation of the three per-seed means. Seed-level results: seed 10 → 19.83 ± 0.09, seed 11 → 19.80 ± 0.12, seed 12 → 19.84 ± 0.10._
+_Both rows summarize 50 fixed episodes per training seed at `eval_seed=20000`; aggregate ± is the standard deviation of independent seed means. The evaluator reports the shared command-tracking return, while training uses the stock task reward._
 
 ---
 
@@ -49,18 +46,23 @@ _Brax baseline is the mean over seeds 10, 11, and 12 (50 fixed episodes each); �
 Drive the quadruped live in native 100+ FPS C++ MuJoCo with full 3-axis joystick control:
 
 ```powershell
-# Drive Top Champion Policy (Seed 9016):
-python eval/view_native_v2.py NEW_checkpoints/ppo_v2/ppo_seed9016.pt
+# Drive Top Champion Policy (Seed 9033):
+python eval/view_native_v2.py NEW_checkpoints/ppo_v2/ppo_seed9033.pt
 
 # Drive Seed 8009 Policy:
 python eval/view_native_v2.py NEW_checkpoints/ppo_v2/ppo_seed8009.pt
 ```
 
 ### 🕹️ Keyboard Controls:
-* **W** / **S**: Move Forward / Backward ($v_x$)
-* **A** / **D**: Strafe Left / Right ($v_y$)
-* **Q** / **E**: Yaw Turn Left / Right ($\omega_z$)
-* **Keys 1, 2, 3, 4**: Speed Presets ($0.3$, $0.6$, $0.9$, $1.2\text{ m/s}$)
+
+* **W** / **Up Arrow**: Increase forward velocity `vx`
+* **S** / **Down Arrow**: Decrease forward velocity `vx`
+* **A** / **Left Arrow**: Turn left (increase yaw rate)
+* **D** / **Right Arrow**: Turn right (decrease yaw rate)
+* **Q**: Strafe left (increase lateral velocity `vy`)
+* **E**: Strafe right (decrease lateral velocity `vy`)
+* **Keys 1, 2, 3, 4**: Forward-speed presets of `0.5`, `1.0`, `1.5`, and `2.0 m/s`
+* **Space**: Stop (`vx = vy = yaw = 0`)
 
 ---
 
@@ -76,9 +78,10 @@ for s in {9001..9010}; do sbatch --partition=gpu --exclude=xgpj0,xgpe0 --time=04
 
 ## 🛡️ Correctness Contracts
 
-- **GAE**: Operates on `[time, environment]` tensors without crossing vector stream boundaries ($\text{GAE}(\gamma=0.97, \lambda=0.95)$).
+- **GAE**: Operates on `[time, environment]` tensors without crossing vector stream boundaries; `gamma = 0.97`, `lambda = 0.95`.
 - **Autoreset**: Completed vector slots restore cached randomized initial states.
-- **Reward**: Uses unmodified MuJoCo Playground `state.reward`.
-- **Policy Distribution**: Gaussian distribution with unclamped log-probability density and `[-1, 1]` action clamping.
+- **Training reward**: Uses unmodified MuJoCo Playground `state.reward`.
+- **Evaluation metric**: Custom and Brax use the same deterministic command-tracking return and velocity-error metrics; this is distinct from the training reward.
+- **Policy Distribution**: Tanh-squashed Gaussian with the squash Jacobian in the log probability and a final `[-1, 1]` environment-bound check.
 - **Low-Pass Action Filter**: 0.7/0.3 EMA filter on action output prevents high-frequency motor target jitter.
 - **Observation Normalization**: Running observation moments stored inside every checkpoint.
