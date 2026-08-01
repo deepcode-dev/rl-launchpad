@@ -1,10 +1,10 @@
+# ruff: noqa: E402
 """Evaluate Brax 200M PPO baseline checkpoints for Rule R2 compliance."""
 
 import argparse
 import json
 from pathlib import Path
 import sys
-import time
 
 from brax.training.agents.ppo import checkpoint as ppo_checkpoint
 import jax
@@ -21,7 +21,14 @@ from eval.evaluate import DEFAULT_EVAL_SEED
 from eval.view_native import _actor_observation, _sensor
 
 
-def evaluate_brax_checkpoint(ckpt_path: Path, eval_seed: int = DEFAULT_EVAL_SEED, num_episodes: int = 50) -> dict:
+def evaluate_brax_checkpoint(
+    ckpt_path: Path,
+    eval_seed: int = DEFAULT_EVAL_SEED,
+    num_episodes: int = 50,
+    *,
+    training_seed: int | None = None,
+    use_ema: bool = False,
+) -> dict:
     env_name = "Go1JoystickFlatTerrain"
     env_config = mp.locomotion.get_default_config(env_name)
     env_config.impl = "jax"
@@ -55,6 +62,7 @@ def evaluate_brax_checkpoint(ckpt_path: Path, eval_seed: int = DEFAULT_EVAL_SEED
         mujoco.mj_resetDataKeyframe(model, data, home_id)
         mujoco.mj_forward(model, data)
         last_action = np.zeros(model.nu, dtype=np.float32)
+        ema_action = None
         cmd = np_rng.uniform(low=[-1.0, -0.6, -0.8], high=[1.5, 0.6, 0.8]).astype(np.float32)
 
         ep_reward = 0.0
@@ -66,7 +74,15 @@ def evaluate_brax_checkpoint(ckpt_path: Path, eval_seed: int = DEFAULT_EVAL_SEED
             rng, act_rng = jax.random.split(rng)
             obs_dict = {"state": jnp.asarray(obs)[None, :]}
             action, _ = inference_fn(obs_dict, act_rng)
-            last_action = np.asarray(action[0])
+            raw_action = np.asarray(action[0])
+            if use_ema:
+                if ema_action is None:
+                    ema_action = raw_action.copy()
+                else:
+                    ema_action = 0.7 * ema_action + 0.3 * raw_action
+                last_action = ema_action.copy()
+            else:
+                last_action = raw_action
 
             data.ctrl[:] = default_pose + last_action * action_scale
             for _ in range(substeps):
@@ -94,14 +110,26 @@ def evaluate_brax_checkpoint(ckpt_path: Path, eval_seed: int = DEFAULT_EVAL_SEED
         if ep_index % 10 == 0 or ep_index == num_episodes:
             print(f"  [Brax 200M Eval] Episode {ep_index}/{num_episodes}: Return={ep_reward:.4f}, Steps={ep_steps}")
 
+    checkpoint_step = int(ckpt_path.name) if ckpt_path.name.isdigit() else None
     return {
+        "protocol": "brax-ppo-command-tracking-v2",
         "checkpoint": str(ckpt_path),
+        "training_seed": training_seed,
+        "action_filter": "ema_0.7_0.3" if use_ema else "none",
+        "checkpoint_step": checkpoint_step,
+        "eval_seed": eval_seed,
+        "episode_seeds": episode_seeds,
+        "deterministic_actions": True,
         "num_episodes": num_episodes,
         "mean_reward": float(np.mean(episode_rewards)),
         "std_reward": float(np.std(episode_rewards)),
         "mean_episode_length": float(np.mean(episode_lengths)),
         "mean_lin_err": float(np.mean(episode_lin_errs)),
         "mean_yaw_err": float(np.mean(episode_yaw_errs)),
+        "episode_rewards": [float(value) for value in episode_rewards],
+        "episode_lengths": [int(value) for value in episode_lengths],
+        "episode_lin_errs": [float(value) for value in episode_lin_errs],
+        "episode_yaw_errs": [float(value) for value in episode_yaw_errs],
     }
 
 
@@ -113,6 +141,9 @@ def main() -> None:
         default=PROJECT_ROOT / "baselines" / "brax_go1_200m",
         help="Directory containing Brax step checkpoints (default: baselines/brax_go1_200m).",
     )
+    parser.add_argument("--training-seed", type=int, default=None)
+    parser.add_argument("--output", type=Path, default=None)
+    parser.add_argument("--ema", action="store_true", help="Apply the custom policy's 0.7/0.3 EMA filter")
     args = parser.parse_args()
 
     brax_dir = args.checkpoint_dir
@@ -128,7 +159,18 @@ def main() -> None:
     latest_ckpt = step_dirs[-1]
     print(f"Evaluating Brax 200M checkpoint: {latest_ckpt.name} over 50 fixed episodes...")
 
-    result = evaluate_brax_checkpoint(latest_ckpt, eval_seed=DEFAULT_EVAL_SEED, num_episodes=50)
+    result = evaluate_brax_checkpoint(
+        latest_ckpt,
+        eval_seed=DEFAULT_EVAL_SEED,
+        num_episodes=50,
+        training_seed=args.training_seed,
+        use_ema=args.ema,
+    )
+
+    if args.output is not None:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(result, indent=2), encoding="utf-8")
+        print(f"Saved evaluation JSON: {args.output}")
 
     print("\n================ BRAX 200M BASELINE EVALUATION RESULTS ================")
     print(f"Checkpoint: {result['checkpoint']}")
