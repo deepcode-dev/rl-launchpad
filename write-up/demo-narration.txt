@@ -1,13 +1,11 @@
-This is a from-scratch PPO agent for command-conditioned Unitree Go1 locomotion in MuJoCo Playground.
+This demo shows a from-scratch PyTorch PPO policy for command-conditioned Unitree Go1 locomotion in MuJoCo Playground.
 
-The policy receives a five-frame history of the stock forty-eight-value observation and produces twelve normalized joint targets. The actor and critic are separate two-layer neural networks. Actions come from a tanh-squashed Gaussian, and observation statistics are stored with each checkpoint.
+The actor receives a 48-value observation and outputs 12 normalized joint targets through a 512-256-128 SiLU MLP. A privileged 123-value critic is used only during training. PPO uses generalized advantage estimation, four minibatch passes, a clipped surrogate, Huber value loss, and entropy regularization.
 
-The first version looked like it was training, but its live behavior was awful. The cause was not Gymnasium. I had flattened vector rollouts before generalized advantage estimation, so returns crossed between different robots. Fallen environments never reset. The wrapper reconstructed a different reward, and the Gaussian policy sent unbounded actions. I also removed an early synthetic benchmark chart that was not measured evidence.
+Training keeps the stock task reward. The wrapper adds correct vector autoreset and termination handling, bounded actions, running observation normalization, and the declared 0.7/0.3 action filter. Evaluation is deterministic and uses the same command-tracking metric for both agents.
 
-The corrected contract keeps rollouts shaped by time and environment, distinguishes termination from time-limit truncation, bootstraps the real terminal observation, autoresets each finished slot, uses the native reward unchanged, and bounds every action. Fourteen regression tests cover these boundaries.
+The final custom result uses five independent 200-million-step seeds: 9033, 9006, 9018, 9016, and 8009. Each reaches the 1,000-step horizon on all 50 fixed evaluation episodes. The aggregate return is 19.752 plus or minus 0.020, with linear velocity error 0.0851 meters per second.
 
-I trained seeds ten, eleven, and twenty-one for three hundred twenty-seven thousand six hundred eighty steps each. A longer run degraded on a validation block, so I archived it, early-stopped, and moved final evaluation to fifty untouched episodes starting at seed twenty thousand.
+The measured training curve comes from 244 logged points for every seed, sampled every five epochs. The chart compares this custom mean and standard deviation with the three-seed Brax reference.
 
-Custom PPO achieved a mean native return of ten point nine one, with mean episode length seven hundred forty-six. The matched Stable-Baselines3 baseline scored one point three one and two hundred eighty-two steps. SB3 uses the same vector batch, rollout size, observations, actions, reward, budget, and evaluation episodes; it is baseline only.
-
-The main limitation is deployment realism. Windows ran MJX on CPU while PyTorch used an RTX thirty seventy, and viewer mouse pushes do not affect policy physics. The full return and episode-length distributions remain in the submitted JSON rather than hiding early falls.
+The main limitation is speed: the custom run averages 13,561 seconds because data crosses the JAX-MJX and PyTorch boundary, while the documented Brax run takes 589 seconds. This is a simulation result only, with no sim-to-real claim. The footage uses only the reported 9033 checkpoint under three deterministic evaluation-style command vectors.

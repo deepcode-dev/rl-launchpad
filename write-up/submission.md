@@ -2,89 +2,45 @@
 
 ## Problem
 
-A quadruped deployed in a changing facility must track velocity commands without falling as contacts, joint state, and momentum evolve. A scripted gait can work inside its design envelope but is brittle when contact timing or commands change. I therefore ask a deliberately modest question: can a PPO implementation written from scratch learn the stock MuJoCo Playground Go1 joystick task, and how does its performance compare with an established baseline (Rule R2: Brax PPO) under a shared evaluation contract?
+Can a small, auditable PPO implementation written from scratch learn the stock MuJoCo Playground `Go1JoystickFlatTerrain` task? I evaluate that question against the established Brax PPO implementation on the same 48-dimensional actor observation, 12-dimensional normalized action space, 1,000-step episode limit, command distribution, deterministic evaluator, and held-out episode seeds.
 
-Success is defined before the final run: use the unmodified task reward; evaluate at least three training seeds for 50 fixed, disjoint episodes each; compare against the Brax PPO baseline trained up to 200M timesteps; report environment steps and wall time; and show failure rather than selecting a single highlight rollout.
-
----
-
-## 🏛️ Network Architecture & Design
+## Approach and architecture
 
 ```mermaid
-graph TD
-    subgraph Environment Inputs
-        O[Actor Observation: 48-dim<br/>LinVel, Gyro, Gravity, Joint Pos/Vel, Last Actions, Commands]
-        PO[Privileged Observation: 123-dim<br/>Actor Obs + True LinVel, Feet Contact Forces, Friction, External Pushes]
-    end
-
-    subgraph Actor Network MLP
-        O --> A1[Linear 48 to 512 + ELU]
-        A1 --> A2[Linear 512 to 256 + ELU]
-        A2 --> A3[Linear 256 to 128 + ELU]
-        A3 --> AM[Action Mean μ: 12-dim]
-        AM --> Normal[Gaussian Action Distribution: N μ, σ]
-        Normal --> Sample[Sample Action u]
-        Sample --> Clamp[Clamp -1, 1]
-        Clamp --> EMA[Low-Pass EMA Filter: 0.7 u_prev + 0.3 u_curr]
-        EMA --> JointTargets[12 Joint Position Targets]
-    end
-
-    subgraph Privileged Critic Network MLP
-        PO --> C1[Linear 123 to 512 + ELU]
-        C1 --> C2[Linear 512 to 256 + ELU]
-        C2 --> C3[Linear 256 to 128 + ELU]
-        C3 --> Val[State Value V s: 1-dim]
-    end
+graph LR
+  O[48-dim actor observation] --> A[MLP 512-256-128, SiLU]
+  A --> D[tanh-squashed Gaussian]
+  D --> F[0.7/0.3 EMA action filter]
+  F --> U[12 joint-target offsets]
+  P[123-dim privileged training observation] --> C[MLP 512-256-128, SiLU]
+  C --> V[Value estimate]
 ```
 
-The actor and critic operate as decoupled MLPs. The actor operates strictly on hardware-available sensors (48-dim), applying a **0.7 / 0.3 Low-Pass EMA Action Filter** to prevent high-frequency joint target jitter. The critic evaluates privileged simulator ground-truth (123-dim) for high-precision value estimation during training.
+The actor and critic are separate PyTorch networks. The actor sees only policy-available state; the critic additionally sees privileged simulator state during training. PPO, minibatch updates, clipped ratios, Adam, and GAE are implemented in `ppo/ppo.py` and `ppo/train_multi_seed.py`; no policy is trained with SB3, RSL-RL, RL-Games, SKRL, CleanRL, or a Brax trainer. Brax is a baseline only.
 
----
+Rollouts remain shaped `[time, environment]` while GAE is computed, then are flattened for updates. The policy uses `gamma=0.97`, `lambda=0.95`, four PPO passes, batch size 5,120, `clip_ratio=0.2`, and a fixed entropy coefficient of 0.01. Checkpoints include the running observation statistics and the complete YAML configuration.
 
-## Approach
+## Reward and environment contract
 
-The submitted trainer is a PyTorch implementation of clipped PPO connected to MuJoCo Playground's JAX physics engine via `MJXVectorPyTorchWrapper`. The policy operates on a single-frame 48-dimensional observation vector (`history_len: 1`). Generalized Advantage Estimation ($\text{GAE}(\gamma=0.97, \lambda=0.95)$) computes advantage targets normalized per minibatch (`batch_size = 5120`). Value loss uses Smooth L1 / Huber loss, and policy entropy is maintained with a fixed coefficient (`ent_coef: 0.01`).
-
-Reward is exactly MuJoCo Playground's unmodified `state.reward`. SB3 and Brax serve as baselines per Rule R1/R2.
-
----
+Training uses MuJoCo Playground's `state.reward` unchanged. Relative to the stock task, the custom training wrapper adds only vector-slot autoreset, explicit termination versus time-limit handling, a configurable observation-history wrapper, bounded normalized actions, and the 0.7/0.3 EMA post-processing used by the submitted policy. The evaluator uses native MuJoCo C physics and a shared command-tracking return, `max(0, 1 - ||v_xy-v_cmd||²) * control_dt`, plus linear-velocity and yaw-rate errors. This metric is deliberately stated separately from the stock training reward. The Brax baseline uses the same evaluator and observation/action dimensions, but its stock policy output has no custom EMA; that control-postprocessing difference is a declared limitation of this comparison.
 
 ## Evidence
 
-Training seeds were evaluated with **200,000,000 environment steps per seed** trained on NVIDIA H100 GPUs. Every checkpoint was evaluated deterministically over 50 fixed, disjoint evaluation episodes.
+All custom checkpoints were trained for 199,884,800 environment steps per seed and evaluated deterministically for 50 episodes using the fixed block 20,000–20,049. The table's `±` values on individual rows are within-episode standard deviations; the aggregate `±` is the standard deviation of the independent seed means.
 
-| Agent / Model | Environment Steps | Wall Time | Lin. Vel. Error (`LinErr`) | Yaw Rate Error (`YawErr`) | Mean Return (50 Ep.) | Fall Rate (`Done`) |
+| Agent | Seeds | Wall time/seed | Return | LinErr | YawErr | Length |
 |---|---:|---:|---:|---:|---:|---:|
-| **Brax PPO Baseline (200M, 3-seed mean)** | 200,000,000 | 589.3 s | **0.0668** | **0.0454 rad/s** | **19.82 ± 0.02** | **0.00%** |
-| 🥇 **Custom PyTorch PPO (Seed 9016)** 🏆 | 200,000,000 | 13,100.0 s | **0.0863** | **0.0675 rad/s** | **19.76 ± 0.11** | **0.00%** |
-| 🥇 **Custom PyTorch PPO (Seed 8009)** 🏆 | 200,000,000 | 13,100.0 s | **0.0873** | **0.0698 rad/s** | **19.76 ± 0.11** | **0.00%** |
-| 🥇 **Custom PyTorch PPO (Seed 9006)** 🏆 | 200,000,000 | 13,100.0 s | **0.0853** | **0.0702 rad/s** | **19.74 ± 0.16** | **0.00%** |
-| 🥇 **Custom PyTorch PPO (Seed 2005)** 🏆 | 200,000,000 | 14,786.0 s | **0.1160** | **0.0715 rad/s** | **19.61 ± 0.23** | **0.00%** |
+| Custom PyTorch PPO | 9033, 9006, 9018, 9016, 8009 | 13,434–13,872 s; mean 13,561 s | **19.752 ± 0.020** | **0.0851 m/s** | **0.0676 rad/s** | 1,000 |
+| Brax PPO baseline | 10, 11, 12 | documented 589.3 s | **19.821 ± 0.016** | **0.0668 m/s** | **0.0454 rad/s** | 1,000 |
 
-_Brax baseline is the mean over seeds 10, 11, and 12 (50 fixed episodes each); ± is the standard deviation of the three per-seed means. Seed-level results: seed 10 → 19.83 ± 0.09, seed 11 → 19.80 ± 0.12, seed 12 → 19.84 ± 0.10._
+The custom agent reaches the horizon on every reported episode and is close to, but below, the faster Brax reference. The full per-episode JSON files, checkpoint metadata, seeds, and measured plot are present in the repository. I also ran a matched-postprocessing ablation: applying the custom EMA after training to stock Brax weights reduced Brax to **7.241 ± 0.906** return and **380.6** steps, so it is not substituted for the established reference. A fully controlled EMA comparison would require retraining Brax with the filter inside its environment. The five canonical custom Slurm logs provide 244 measured points per seed from epoch 5 through epoch 1220; the plot reports their mean ± seed standard deviation. The final benchmark statistics remain the primary multi-seed claim.
 
-![Measured training and evaluation comparison](benchmark_comparison.png)
+## Demo and constraints
 
----
+[`demo.mp4`](demo.mp4) is an under-90-second narrated walkthrough using only the reported seed 9033 checkpoint; it shows three deterministic evaluation-style command episodes and `demo-narration.txt` is its transcript. It shows the architecture, failed approaches, the measured final comparison, and the limitation above. Training ran on H100 NVL hardware; the custom implementation transfers between JAX MJX and PyTorch, while Brax keeps simulation and learning in JAX. That bridge explains the large latency gap: the recorded custom mean is about 13,561 s for 200M steps versus about 589 s for the documented Brax run. The video is simulation-only and makes no sim-to-real claim.
 
-## 🎥 Locomotion Demo Video
+## Honesty and trajectory
 
-Below is the silky-smooth video demonstration recorded using native MuJoCo C physics (`eval/record_native_video.py`) from the **Seed 2005 Champion Policy (`ppo_seed2005.pt`)**:
+The first implementation mixed vector trajectories during GAE, failed to autoreset completed slots, changed reward semantics, and sent unbounded Gaussian actions. Those failures produced poor policies and are retained in `docs/failures.md`. Ten PPO passes also caused excessive clipping in the pilot; four passes were retained. The 131k-environment experiment reduced wall time to roughly 19 minutes but produced an awful policy because it reduced the number of optimizer epochs per fixed sample budget; it is not the submitted result.
 
-![Locomotion Demo Video](quadruped_walking.mp4)
-
----
-
-## Constraints & Hardware Throughput
-
-The cluster jobs ran on NVIDIA H100 NVL GPUs. JAX physics execution ran inside CUDA kernels, while PyTorch neural network updates operated on transferred GPU tensors (`MJXVectorPyTorchWrapper`). The throughput achieved ~13,500 SPS for PyTorch tensor inter-op versus 438,900 SPS for JAX-native Brax PPO.
-
-The live viewer (`eval/view_native_v2.py`) runs natively on Windows with GLFW 3-axis keyboard steering controls (W/A/S/D, Q/E, and speed presets 1, 2, 3, 4) allowing continuous interactive control up to 100,000 steps per session.
-
----
-
-## Honesty & Trajectory (What Failed & Why)
-
-1. **Cold-Start Exploration Collapse**: Initial runs with `initial_log_std: -0.5` without entropy bounds suffered early falls during initial exploration steps. Conversely, setting `ent_coef: 0.0` caused policy action variance to collapse prematurely ($\sigma \to 0.05$), freezing the robot in a static pose.
-2. **Minibatch Cancellation Flaw**: Using `(old_log_probs - new_log_probs).mean()` in early ratio estimators allowed positive and negative log-prob differences to cancel across minibatches. Switching to Schulman's ratio estimator $\text{approx\_kl} = \frac{1}{N} \sum ((\hat{r}_t - 1) - \ln \hat{r}_t)$ eliminated numerical spiky divergences.
-3. **Entropy & EMA Stabilization**: Adding active policy entropy exploration (**`ent_coef: 0.01`**, **`initial_log_std: -1.0`**) and 0.7/0.3 low-pass action filtering forced the actor to discover high-thrust leg extension strides while maintaining **0.00% fall rate** and cutting linear velocity tracking error in half (**`LinErr = 0.114`**).
+The next two-week plan is: (1) profile and remove the JAX/PyTorch boundary while preserving the from-scratch PPO loss; (2) report a controlled EMA/no-EMA baseline ablation; (3) add command perturbations and push robustness; and (4) add a hardware-in-the-loop check before making any deployment claim.
