@@ -29,13 +29,16 @@ def main():
         # Run 50-episode evaluation if JSON does not exist or is missing metrics
         if not os.path.exists(json_path):
             print(f"--> Evaluating Seed {seed} ({ckpt_path})...", flush=True)
+            print(f"  (output auto-saved to {json_path})", flush=True)
             cmd = [
-                ".venv\\Scripts\\python.exe", "eval/evaluate.py",
+                "uv", "run", "python", "eval/evaluate.py",
                 "--checkpoint", ckpt_path,
                 "--num-episodes", "50",
-                "--save-json", json_path
             ]
             res = subprocess.run(cmd, capture_output=True, text=True)
+
+            if res.returncode != 0:
+                print(f"  WARNING: Seed {seed} eval failed (stderr): {res.stderr.strip()[-200:]}", flush=True)
 
         if os.path.exists(json_path):
             with open(json_path) as f:
