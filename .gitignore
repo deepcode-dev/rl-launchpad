@@ -20,6 +20,8 @@ write-up/demo-assets/
 requirements_pinned.txt
 *.egg-info
 judge_explanation.md
+write-up/judge_viva_prep.md
+write-up/rl_code_walkthrough.md
 
 # Intermediate / seed-sweep checkpoints (not part of the submission)
 NEW_checkpoints/mid/
