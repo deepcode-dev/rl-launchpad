@@ -16,8 +16,8 @@ From a fresh `git clone`, a judge can verify environment contracts, run unit tes
 # 1. Install pinned dependencies (takes ~1 minute)
 uv sync --extra dev --locked
 
-# 2. Run unit & contract regression tests (<10 seconds)
-uv run pytest -q
+# 2. Run unit & contract regression tests (~1 minute)
+uv run pytest -q --basetemp=.pytest_tmp -p no:cacheprovider
 
 # 3. Evaluate top champion policy checkpoint (50 fixed benchmark episodes)
 uv run python eval/evaluate.py --checkpoint NEW_checkpoints/ppo_v2/ppo_seed9016.pt
