@@ -1,6 +1,6 @@
 {
   "protocol": "custom-ppo-command-tracking-v2",
-  "checkpoint": "NEW_checkpoints\\ppo_v2\\ppo_v2\\ppo_seed9002.pt",
+  "checkpoint": "NEW_checkpoints/ppo_v2/ppo_seed9002.pt",
   "checkpoint_metadata": {
     "checkpoint_format": "raw_state_dict",
     "algorithm": "PPO",
@@ -122,8 +122,8 @@
   "mean_episode_length": 1000.0,
   "mean_linear_velocity_error": 0.10052230585320202,
   "mean_yaw_rate_error": 0.0732065817359133,
-  "mean_latency_ms": 0.596826384000351,
-  "p95_latency_ms": 0.9972049997941208,
+  "mean_latency_ms": 0.5179330099915387,
+  "p95_latency_ms": 0.7818050009518624,
   "episode_rewards": [
     19.791297116592958,
     19.46286437423244,
