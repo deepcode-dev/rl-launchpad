@@ -21,3 +21,33 @@ requirements_pinned.txt
 *.egg-info
 judge_explanation.md
 
+# Intermediate / seed-sweep checkpoints (not part of the submission)
+NEW_checkpoints/mid/
+NEW_checkpoints/ppo_v2/ppo_seed3*
+NEW_checkpoints/ppo_v2/ppo_seed4*
+NEW_checkpoints/ppo_v2/ppo_seed5*
+NEW_checkpoints/ppo_v2/ppo_seed6*
+NEW_checkpoints/ppo_v2/ppo_seed7*
+NEW_checkpoints/ppo_v2/ppo_seed80*
+NEW_checkpoints/ppo_v2/ppo_seed90*
+# ...but keep the champion checkpoint and sidecars for already-tracked checkpoints
+!NEW_checkpoints/ppo_v2/ppo_seed8009.pt.meta.json
+!NEW_checkpoints/ppo_v2/ppo_seed9033.pt
+!NEW_checkpoints/ppo_v2/ppo_seed9033.pt.meta.json
+!NEW_checkpoints/ppo_v2/ppo_seed9033_eval.json
+!NEW_checkpoints/ppo_v2/ppo_seed9002.pt.meta.json
+!NEW_checkpoints/ppo_v2/ppo_seed9003.pt.meta.json
+!NEW_checkpoints/ppo_v2/ppo_seed9006.pt.meta.json
+!NEW_checkpoints/ppo_v2/ppo_seed9016.pt.meta.json
+!NEW_checkpoints/ppo_v2/ppo_seed9018.pt.meta.json
+
+# Scratch output artifacts
+scratch/*.log
+scratch/*.txt
+
+# One-off scratch scripts (not referenced by docs; build_ppo_v2_summary.py is kept)
+scratch/eval_9000_seeds.py
+scratch/fix_plot_200m.py
+scratch/plot_champion_benchmark.py
+scratch/sync_new_checkpoints.py
+
