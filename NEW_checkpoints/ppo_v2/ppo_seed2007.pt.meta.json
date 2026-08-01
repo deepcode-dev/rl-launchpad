@@ -21,8 +21,8 @@
   ],
   "history_len": 1,
   "episode_length": 1000,
-  "total_env_steps": 93388800,
-  "wall_time_seconds": 6402.932155370712,
+  "total_env_steps": 139264000,
+  "wall_time_seconds": 9477.702943325043,
   "config": {
     "env_name": "Go1JoystickFlatTerrain",
     "seed": 2007,
