@@ -10,7 +10,7 @@ The raw vmapped MJX task does not autoreset. Fallen robots therefore remained te
 
 ## 25 July 2026 — evaluation used a different reward
 
-The original wrapper rebuilt reward from metric components, multiplied velocity tracking a second time, and omitted the stock nonnegative clip. Negative reported returns were consequently not MuJoCo Playground task returns. Training, evaluation, and SB3 now use `state.reward` unchanged.
+The original training wrapper rebuilt reward from metric components, multiplied velocity tracking a second time, and omitted the stock nonnegative clip. Negative reported returns were consequently not MuJoCo Playground task returns. Training now uses `state.reward` unchanged. The final native evaluator intentionally reports a separate, shared command-tracking metric for the custom and Brax policies; it must not be described as the native task reward.
 
 ## 25 July 2026 — unbounded actions
 
@@ -18,7 +18,7 @@ A raw Normal policy sent arbitrarily large actions to normalized joint targets. 
 
 ## 25 July 2026 — synthetic evidence removed
 
-An early plotting script drew hand-authored exponential curves and the draft write-up treated them as measured results. Those claims and the generated chart are invalid. The replacement plotter requires complete custom/SB3 JSON summaries and measured per-seed histories; missing evidence is a hard error.
+An early plotting script drew hand-authored exponential curves and the draft write-up treated them as measured results. Those claims are invalid. The current plot uses the five pulled Slurm histories, sampled at the points actually printed by training, and measured baseline checkpoint evaluations; no synthetic training trajectory is used.
 
 ## Corrected pilot
 
