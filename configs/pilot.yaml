@@ -1,0 +1,22 @@
+# One-seed pilot used to validate learning before the full three-seed run.
+env_name: "Go1JoystickFlatTerrain"
+seed: 10
+seeds: [10]
+num_envs: 128
+history_len: 5
+episode_length: 1000
+steps_per_epoch: 16384
+epochs: 20
+total_timesteps_per_seed: 327680
+total_timesteps: 327680
+gamma: 0.99
+lam: 0.95
+clip_ratio: 0.2
+pi_lr: 0.0003
+max_grad_norm: 0.5
+train_iters: 4
+batch_size: 512
+hidden_dim: 256
+vf_coef: 0.5
+ent_coef: 0.01
+checkpoint_dir: "checkpoints/pilot"

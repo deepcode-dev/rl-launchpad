@@ -1,0 +1,60 @@
+{
+  "checkpoint_format": "raw_state_dict",
+  "algorithm": "PPO",
+  "training_contract": "custom-ppo-privileged-critic-tracking-v3",
+  "policy_distribution": "tanh_squashed_normal",
+  "observation_normalization": "running_mean_variance",
+  "reward_source": "mujoco_playground_state_reward",
+  "physics_backend": "jax",
+  "num_envs": 8192,
+  "rollout_size": 163840,
+  "seed": 20,
+  "env_name": "Go1JoystickFlatTerrain",
+  "obs_dim": 48,
+  "critic_obs_dim": 123,
+  "act_dim": 12,
+  "hidden_dim": 512,
+  "hidden_sizes": [
+    512,
+    256,
+    128
+  ],
+  "history_len": 1,
+  "episode_length": 1000,
+  "total_env_steps": 199884800,
+  "wall_time_seconds": 13043.543936491013,
+  "config": {
+    "anneal_lr": true,
+    "batch_size": 5120,
+    "checkpoint_dir": "checkpoints/cluster_100m_v2",
+    "clip_ratio": 0.2,
+    "ent_coef": 0.005,
+    "ent_coef_final": 0.001,
+    "env_name": "Go1JoystickFlatTerrain",
+    "episode_length": 1000,
+    "epochs": 1220,
+    "gamma": 0.97,
+    "hidden_dim": 512,
+    "hidden_sizes": [
+      512,
+      256,
+      128
+    ],
+    "history_len": 1,
+    "initial_log_std": -1.0,
+    "lam": 0.95,
+    "max_grad_norm": 1.0,
+    "num_envs": 8192,
+    "pi_lr": 0.0003,
+    "seed": 20,
+    "seeds": [
+      20
+    ],
+    "steps_per_epoch": 163840,
+    "target_kl": 0.02,
+    "total_timesteps": 199884800,
+    "total_timesteps_per_seed": 199884800,
+    "train_iters": 4,
+    "vf_coef": 0.5
+  }
+}

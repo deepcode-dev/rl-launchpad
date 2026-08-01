@@ -1,19 +1,3 @@
-## Approach
+# Approach
 
-### Algorithm Choice
-- Why PPO over SAC/TD3? [Your reasoning]
-- What did you rule out and why?
-
-### Network Architecture
-- [Insert architecture diagram or description]
-- Why this size? (hidden dims, number of layers)
-- What alternatives did you consider?
-
-### Reward Design
-- What reward function did you use?
-- Did you modify the environment's default reward?
-
-### Environment Modifications
-- What did you change from the stock task?
-- Why?
-
+The submitted agent is a from-scratch clipped PPO implementation with vectorized GAE, separate actor/critic MLPs (512-256-128), a tanh-squashed Gaussian action distribution with tuned initial std (`initial_log_std: -1.9`), running observation normalization, single-frame 48-dim observation (`history_len: 1`), 123-dim privileged critic observations, native reward, bounded actions, and correct termination/truncation bootstrapping. Brax and SB3 are used as published baselines. See `submission.md` and the implementation under `ppo/`.
