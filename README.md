@@ -2,7 +2,7 @@
 
 A from-scratch PyTorch PPO agent for `Go1JoystickFlatTerrain` in MuJoCo Playground (MJX), built for the Launchpad 2026 Griffin Labs RL track. Rule R2 baseline comparison uses official Brax PPO.
 
-The implementation features 8,192 parallel vector environment integration via `MJXVectorPyTorchWrapper`, 512-256-128 separate Actor-Critic MLPs with SiLU activations, active policy entropy exploration (`ent_coef: 0.01`, `initial_log_std: -1.0`), running observation normalization, 0.7/0.3 low-pass EMA action filtering, a 123-dim asymmetric privileged critic, and Generalized Advantage Estimation (\( \text{GAE}(\gamma=0.97, \lambda=0.95) \)).
+The implementation features 8,192 parallel vector environment integration via `MJXVectorPyTorchWrapper`, 512-256-128 separate Actor-Critic MLPs with SiLU activations, active policy entropy exploration (`ent_coef: 0.01`, `initial_log_std: -1.0`), running observation normalization, 0.7/0.3 low-pass EMA action filtering, a 123-dim asymmetric privileged critic, and Generalized Advantage Estimation with `GAE(gamma=0.97, lambda=0.95)`.
 
 Across five independent 200M-step seeds, the custom agent reaches **19.752 ± 0.020** mean command-tracking return, **0.0851 m/s** LinErr, **0.0676 rad/s** YawErr, and 1,000-step episodes. The three-seed 200M Brax reference reaches **19.821 ± 0.016**, **0.0668 m/s**, and **0.0454 rad/s**. These are deterministic native-MuJoCo evaluations using the shared command-tracking metric; training itself uses the stock `state.reward`.
 
@@ -22,7 +22,7 @@ uv run pytest -q --basetemp=.pytest_tmp -p no:cacheprovider
 # 3. Evaluate top champion policy checkpoint (50 fixed benchmark episodes)
 uv run python eval/evaluate.py --checkpoint NEW_checkpoints/ppo_v2/ppo_seed9033.pt
 
-# 4. Drive the trained policy live in 3D (W/A/S/D, Q/E, 1/2/3/4 speed presets):
+# 4. Drive the trained policy live in 3D (W/A/S/D or arrow keys, Q/E, 1/2/3/4 presets):
 uv run python eval/view_native_v2.py NEW_checkpoints/ppo_v2/ppo_seed9033.pt
 ```
 
@@ -54,10 +54,15 @@ python eval/view_native_v2.py NEW_checkpoints/ppo_v2/ppo_seed8009.pt
 ```
 
 ### 🕹️ Keyboard Controls:
-* **W** / **S**: Move Forward / Backward (\( v_x \))
-* **A** / **D**: Strafe Left / Right (\( v_y \))
-* **Q** / **E**: Yaw Turn Left / Right (\( \omega_z \))
-* **Keys 1, 2, 3, 4**: Speed Presets (\( 0.3 \), \( 0.6 \), \( 0.9 \), \( 1.2\text{ m/s} \))
+
+* **W** / **Up Arrow**: Increase forward velocity `vx`
+* **S** / **Down Arrow**: Decrease forward velocity `vx`
+* **A** / **Left Arrow**: Turn left (increase yaw rate)
+* **D** / **Right Arrow**: Turn right (decrease yaw rate)
+* **Q**: Strafe left (increase lateral velocity `vy`)
+* **E**: Strafe right (decrease lateral velocity `vy`)
+* **Keys 1, 2, 3, 4**: Forward-speed presets of `0.5`, `1.0`, `1.5`, and `2.0 m/s`
+* **Space**: Stop (`vx = vy = yaw = 0`)
 
 ---
 
@@ -73,7 +78,7 @@ for s in {9001..9010}; do sbatch --partition=gpu --exclude=xgpj0,xgpe0 --time=04
 
 ## 🛡️ Correctness Contracts
 
-- **GAE**: Operates on `[time, environment]` tensors without crossing vector stream boundaries (\( \text{GAE}(\gamma=0.97, \lambda=0.95) \)).
+- **GAE**: Operates on `[time, environment]` tensors without crossing vector stream boundaries; `gamma = 0.97`, `lambda = 0.95`.
 - **Autoreset**: Completed vector slots restore cached randomized initial states.
 - **Training reward**: Uses unmodified MuJoCo Playground `state.reward`.
 - **Evaluation metric**: Custom and Brax use the same deterministic command-tracking return and velocity-error metrics; this is distinct from the training reward.
