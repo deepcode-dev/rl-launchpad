@@ -1,121 +1,101 @@
-# 🎓 JUDGE DEFENSE & INTERVIEW PREPARATION GUIDE
+# Judge walkthrough notes
 
-This document prepares you for the live judging interview under **Competition Rules R1–R6**. It provides exact code references, mathematical explanations, and key talking points so any team member can confidently walk judges through our from-scratch PyTorch implementation.
+These notes use the current canonical submission. Do not quote older SB3,
+327,680-step, seed-2005, five-frame, or RTX-3070 draft values.
 
----
+## R1: what was written from scratch
 
-## 🏛️ RULE R1: ALGORITHM & NETWORK WALKTHROUGH
+The submitted agent is clipped PPO in `ppo/ppo.py` and
+`ppo/train_multi_seed.py`. The actor is a 48-input, 512-256-128 SiLU MLP;
+the critic is a separate 123-input, 512-256-128 SiLU MLP. The actor samples a
+tanh-squashed Normal action and includes the change-of-variables correction in
+the stored log probability. The 12 outputs are normalized joint-target
+offsets. The critic is privileged only during training.
 
-Under **Rule R1**, judges will ask you to walk through three specific technical areas:
+GAE keeps the rollout tensor shaped `[time, environment]`:
 
-```
-1. Advantage Estimation (GAE)
-2. PPO Loss Formulation (Clipped Policy Loss + Huber Value Loss + Entropy Loss)
-3. Key Network Architecture Design Decision
-```
-
----
-
-### 1️⃣ ADVANTAGE ESTIMATION: Generalized Advantage Estimation ($\text{GAE}(\gamma, \lambda)$)
-
-* **Code Location**: [`ppo/ppo.py:34-70`](file:///c:/Users/ravid/Desktop/rl-launchpad/ppo/ppo.py#L34-L70) (`compute_gae` function).
-
-#### 🧮 Theoretical & Mathematical Breakdown:
-GAE computes the advantage $A_t$ as a exponentially weighted sum of temporal difference (TD) residual errors $\delta_t$:
-
-$$\delta_t = r_t + \gamma V(s_{t+1}) (1 - d_{t+1}) - V(s_t)$$
-
-$$A_t = \sum_{l=0}^{\infty} (\gamma \lambda)^l \delta_{t+l}$$
-
-Where:
-* $\gamma = 0.97$: Discount factor for future rewards.
-* $\lambda = 0.95$: Exponential GAE decay parameter balancing bias vs variance.
-* $d_{t+1}$: Episode termination mask (`done`).
-* $V(s)$: Value function predicted by the privileged critic.
-
-#### 💡 How to Explain it to the Judge:
-> *"We compute GAE backward from timestep $T-1$ down to 0. At each step, we calculate the TD error $\delta_t$ using the current reward, discounted next-state value, and current-state value. We then update the advantage recursively with $A_t = \delta_t + \gamma \lambda (1 - \text{done}_{t+1}) A_{t+1}$. Finally, we compute targets $V_{\text{target}} = A_t + V(s_t)$ and normalize $A_t$ per minibatch during policy updates to stabilize gradient variance."*
-
----
-
-### 2️⃣ THE PPO LOSS FORMULATION
-
-* **Code Location**: [`ppo/ppo.py:90-170`](file:///c:/Users/ravid/Desktop/rl-launchpad/ppo/ppo.py#L90-L170) (`PPO.update` method).
-
-The total loss minimized by the optimizer is:
-
-$$L_{\text{total}} = L_{\text{policy}} + c_1 L_{\text{value}} - c_2 L_{\text{entropy}}$$
-
-Where $c_1 = 0.5$ (`vf_coef`) and $c_2 = 0.01$ (`ent_coef`).
-
----
-
-#### A. Policy Loss ($L_{\text{policy}}$ - Clipped Surrogate Objective):
-$$\hat{r}_t(\theta) = \frac{\pi_\theta(a_t | s_t)}{\pi_{\theta_{\text{old}}}(a_t | s_t)}$$
-
-$$L_{\text{policy}}(\theta) = - \mathbb{E}_t \left[ \min \left( \hat{r}_t(\theta) A_t, \, \text{clip}(\hat{r}_t(\theta), 1-\epsilon, 1+\epsilon) A_t \right) \right]$$
-
-* $\epsilon = 0.2$ (`clip_ratio`).
-* **Why Clipping?**: Prevents destructive policy updates by restricting ratio $\hat{r}_t(\theta)$ within $[0.8, 1.2]$ when advantage $A_t > 0$ or $A_t < 0$.
-* **Schulman Ratio Estimator for KL**:
-  $$\text{approx\_kl} = \frac{1}{N} \sum \Big( (\hat{r}_t - 1) - \ln \hat{r}_t \Big)$$
-  If $\text{approx\_kl} > 1.5 \times \text{target\_kl}$ ($0.03$), we early-stop minibatch updates.
-
-#### B. Value Loss ($L_{\text{value}}$ - Huber Loss):
-Instead of standard MSE which is sensitive to reward spikes, we use **Smooth L1 / Huber Loss**:
-
-$$L_{\text{huber}}(e) = \begin{cases} 0.5 e^2 & \text{if } |e| \le 1.0 \\ |e| - 0.5 & \text{otherwise} \end{cases}$$
-
-where $e = V_\theta(s_{\text{priv}}) - V_{\text{target}}$.
-
-#### C. Policy Entropy Bonus ($L_{\text{entropy}}$):
-$$L_{\text{entropy}} = \mathbb{E}_t \left[ \sum_{i=1}^{12} \left( \ln(\sigma_i \sqrt{2\pi e}) \right) \right]$$
-
-* Fixed `ent_coef: 0.01` encourages exploration without noise collapse ($\sigma \approx 0.25 - 0.30$).
-
----
-
-### 3️⃣ NETWORK ARCHITECTURE DESIGN DECISIONS
-
-* **Code Location**: [`ppo/agent.py:20-160`](file:///c:/Users/ravid/Desktop/rl-launchpad/ppo/agent.py#L20-L160) (`ActorCritic` class).
-
-#### Decision 1: Asymmetric Actor-Critic (Privileged Critic)
-* **Actor Observation Space (48-dim)**: Local linear velocity, gyro angular velocity, gravity orientation vector, 12 joint positions, 12 joint velocities, 12 previous actions, 3 command target velocities.
-* **Critic Observation Space (123-dim)**: Includes all actor state **plus privileged simulator ground-truth**: true rigid body linear velocities, feet contact forces, ground friction coefficients, external push forces, and mass perturbations.
-* **Why?**: The critic gets full visibility of environment dynamics during training to estimate accurate $V(s)$, while the actor only uses sensors available on physical hardware!
-
-#### Decision 2: Low-Pass EMA Action Filtering (`0.7 / 0.3`)
-* **Equation**: $a_t^{\text{final}} = 0.7 \cdot a_{t-1}^{\text{final}} + 0.3 \cdot a_t^{\text{raw}}$
-* **Why?**: High-frequency joint target jitter destroys robot gearboxes and causes high-frequency oscillations. EMA filtering acts as a low-pass Butterworth-like filter, producing natural, smooth trotting gaits!
-
----
-
-## 📊 SUMMARY OF RULES R2–R6 COMPLIANCE
-
-### R2: Baseline Comparison
-* **Brax 200M PPO Baseline** (mean over seeds 10/11/12, 50 fixed episodes each): Mean Return **`19.82 ± 0.02`** | `LinErr`: **`0.0668 m/s`** | `YawErr`: **`0.0454 rad/s`**
-* **Baseline checkpoints** live in `baselines/brax_go1_200m{,_seed11,_seed12}`; re-evaluate any seed with:
-  ```bash
-  uv run python eval/eval_brax_seeds.py --checkpoint-dir baselines/brax_go1_200m_seed12
-  ```
-* **Our From-Scratch PyTorch PPO (Seed 9033)**: Mean Return **`19.78 ± 0.13`** | `LinErr`: **`0.0812 m/s`** (99.7% of baseline reward)
-* **Grand mean over 5 champion seeds (9033, 9006, 9018, 9016, 8009)**: **`19.75`**, LinErr **`0.0851 m/s`**, 0.00% fall rate
-
-### R3: Reproducibility (Under 15 Minutes)
-Clone repo and run 1-line command:
-```bash
-python eval/evaluate.py --checkpoint NEW_checkpoints/ppo_v2/ppo_seed9033.pt --num-episodes 50
+```text
+delta_t = r_t + gamma * V_bootstrap * (1 - terminated_t) - V_t
+A_t = delta_t + gamma * lambda * (1 - terminated_t - truncated_t) * A_next
 ```
 
-### R4: Standardized Evaluation
-* 50 fixed evaluation episodes per seed.
-* Disjoint evaluation seed `20000`.
-* Reported seeds: **9033**, **9006**, **9018** (top-3 of the 5-seed champion set).
+At a time-limit truncation, the value of the final terminal observation is
+used for the current bootstrap, but the recursion does not cross into the
+autoreset episode. Only after this calculation are samples flattened for
+minibatch updates. PPO uses `gamma=0.97`, `lambda=0.95`, `clip_ratio=0.2`,
+four update passes, batch size 5,120, Huber value loss, and entropy coefficient
+0.01. If asked about early stopping, the implementation stops an update epoch
+when the Schulman KL estimate exceeds 1.5 times `target_kl`.
 
-### R5: Environment Declarations
-* Unmodified MuJoCo Playground `Go1JoystickFlatTerrain` environment and stock state rewards.
+## R2: baseline comparison
 
-### R6: Compute Honesty
-* **Training Hardware**: NVIDIA H100 NVL GPUs.
-* **Throughput**: ~13,500 SPS for PyTorch tensor inter-op (`MJXVectorPyTorchWrapper`).
-* **Wall Time**: **4 hours 06 minutes (14,786s)** for 200M steps.
+The baseline is the stock Brax PPO trainer, kept under `cluster/` and
+`baselines/`; it is not used to train the custom policy. Both agents use the
+Go1 task, 48-dimensional actor state, 12 actions, the same command seed block
+20,000–20,049, 50 deterministic episodes per training seed, and the same
+native-MuJoCo command-tracking evaluator.
+
+The final custom result is five seeds: 9033, 9006, 9018, 9016, and 8009. It
+achieves return 19.752 +/- 0.020 across seed means, LinErr 0.0851 m/s, and
+YawErr 0.0676 rad/s. Brax seeds 10, 11, and 12 achieve return 19.821 +/-
+0.016, LinErr 0.0668 m/s, and YawErr 0.0454 rad/s. The custom policy uses the
+EMA action post-processing it was trained with; the stock Brax policy does
+not. That difference is a limitation, not a hidden advantage.
+
+The measured post-hoc EMA ablation is in
+`baselines/brax_go1_200m_ema_ablation.json`: the unmodified Brax weights fall
+to return 7.241 +/- 0.906 and mean length 380.6 when the EMA is added only at
+evaluation. This is why the stock Brax result remains the established
+reference and why a genuinely matched EMA baseline would need retraining.
+
+## R3: reproduction
+
+Dependencies are pinned in `pyproject.toml` and `uv.lock`. The canonical
+checkpoint metadata records the environment, dimensions, seed, full config,
+step count, reward source, and custom training wall time. A judge can run:
+
+```powershell
+uv sync --extra dev --locked
+uv run pytest -q --basetemp=.pytest_tmp -p no:cacheprovider
+uv run python eval/evaluate.py --checkpoint NEW_checkpoints/ppo_v2/ppo_seed9033.pt
+```
+
+The evaluator is native MuJoCo and takes substantially less than the training
+run. `eval/validate_submission.py --require-demo` checks all committed final
+JSON files and the submission limits.
+
+## R4: evaluation protocol
+
+The evaluation seed block is fixed and disjoint from training. Every final
+seed has exactly 50 episode returns, lengths, LinErr values, and YawErr values
+in JSON. The reported +/- on the aggregate is the standard deviation of
+independent training-seed means; the per-seed episode standard deviations are
+also retained. The benchmark plot contains measured Brax checkpoint points.
+Five canonical custom Slurm logs are committed. Each contains 244 measured
+training points from epoch 5 through epoch 1220, so the custom curve is a
+five-seed mean with seed standard deviation. Do not claim that stdout logging
+provides an every-epoch trace; it is sampled every five epochs.
+
+## R5: environment and reward
+
+The stock task is `Go1JoystickFlatTerrain`. Training uses its `state.reward`
+unchanged. The custom wrapper adds vector-slot autoreset, explicit natural
+termination versus time-limit truncation, optional history, bounded action
+validation, and a 0.7/0.3 EMA filter. The final evaluator reports a separate
+shared command-tracking metric so the custom and Brax results are directly
+comparable. There is no sim-to-real claim.
+
+## R6: compute honesty and failures
+
+The custom H100 runs average 13,561 seconds for 199,884,800 steps per seed
+(range 13,434–13,872 s). The documented Brax 200M reference takes 589.3 s.
+The custom implementation crosses the JAX MJX and PyTorch boundary; the
+JAX-native reference does not. The 131k-environment experiment reached roughly
+19 minutes but learned poorly because it changed the number of optimizer
+epochs per fixed sample budget, so it is not presented as a final result.
+
+The main failed versions mixed vector trajectories during GAE, did not reset
+completed slots, changed reward semantics, and allowed unbounded actions.
+These are recorded in `docs/failures.md`. The answer to “what would you do
+next?” is to log three custom checkpoint curves, profile the interop boundary,
+run a matched EMA/no-EMA ablation, and test command perturbations.

@@ -1,54 +1,39 @@
-# Two-minute demo script
+# RL-track demo capture script
 
-## 0:00–0:20 — Task and policy
+## Capture contract
 
-Show a deterministic Go1 rollout. Explain that the submitted policy is a from-scratch PyTorch PPO implementation controlling 12 normalized joint targets from a five-frame history of the stock 48-value observation. Reward is the unmodified MuJoCo Playground task reward.
-
-## 0:20–0:55 — What was broken
-
-Show the failure notes or one legacy bad rollout. The original implementation flattened vector environments before GAE, never reset fallen slots, reconstructed a different reward, and emitted unbounded Gaussian actions. State plainly that those checkpoints and the earlier synthetic chart are excluded from all evidence.
-
-## 0:55–1:25 — Correctness changes
-
-Show the contract bullets in the README: time-by-environment GAE, separate termination/truncation handling, per-slot autoreset, tanh-squashed actions, and stored observation-normalization statistics. Mention that regression tests cover trajectory separation, truncation bootstrap, action bounds, reset/history behavior, and checkpoint rejection.
-
-## 1:25–1:50 — Measured comparison
-
-Show `benchmark_comparison.png` and the final table in `submission.md`. Read the custom PPO and SB3 across-seed mean returns, episode lengths, equal environment-step budget, and 50 fixed evaluation episodes per training seed. Identify SB3 as a baseline only, not the submitted trainer.
-
-## 1:50–2:00 — Honest limitation
-
-Return to the rollout. Explain that native Windows ran JAX simulation on CPU while PyTorch used the RTX 3070, and that the passive viewer's mouse forces do not perturb MJX state. Conclude with the strongest remaining failure visible in the episode-length distribution.
-
-## Capture checklist
-
-- Use a final-contract checkpoint and the deterministic recorder.
-- Keep the policy footage, result table, and benchmark plot readable at 1080p.
-- Do not demonstrate viewer mouse pushes as policy disturbances.
-- Keep the exported video at or below two minutes.
-
-## Rebuild the local video
-
-Record deterministic policy footage first:
+Use the same checkpoint reported in the submission:
 
 ```powershell
-uv run python eval/record_video.py checkpoints/ppo_seed10.pt --output write-up/policy-footage.mp4 --seed 20000 --max-steps 500
+.venv\Scripts\python.exe eval\record_native_video.py NEW_checkpoints\ppo_v2\ppo_seed9033.pt --output write-up\policy-footage.mp4 --command 1.0 0 0 --max-steps 500 --fps 50
 ```
 
-On Windows, synthesize the tracked narration at the measured rate:
+The final video is under 90 seconds and uses only the reported
+`ppo_seed9033.pt` checkpoint. It shows three labeled deterministic command
+episodes using command vectors sampled from evaluation seeds 20,000–20,002.
+It uses the human-readable `demo-narration.wav` generated from
+`demo-narration.txt`. Do not use the old 327,680-step pilot or seed 2005 clip.
 
-```powershell
-Add-Type -AssemblyName System.Speech
-$speaker = New-Object System.Speech.Synthesis.SpeechSynthesizer
-$speaker.SelectVoice('Microsoft Zira Desktop')
-$speaker.Rate = 2
-$speaker.SetOutputToWaveFile((Join-Path (Resolve-Path write-up).Path 'demo-narration.wav'))
-$speaker.Speak((Get-Content write-up/demo-narration.txt -Raw -Encoding UTF8))
-$speaker.Dispose()
-```
+## Spoken and visual order
 
-Then assemble the final narrated video:
+1. **Title:** from-scratch PyTorch PPO, Go1 locomotion, five custom seeds.
+2. **Architecture:** 48-dim actor, 123-dim privileged critic, 512-256-128
+   SiLU MLPs, tanh-squashed actions, and the declared EMA action filter.
+3. **Correctness:** time-by-environment GAE, termination/truncation handling,
+   per-slot autoreset, bounded actions, and stored observation statistics.
+4. **Loss:** clipped PPO objective, Huber value loss, entropy bonus, and four
+   minibatch passes.
+5. **Evidence:** 200M steps per seed, 50 fixed episodes, eval seeds
+   20,000–20,049, custom return 19.752 +/- 0.020, Brax return
+   19.821 +/- 0.016.
+6. **Limitations:** the custom curve is built from stdout metrics sampled every
+   five epochs, the custom/Brax postprocessing differs by the disclosed EMA,
+   and the JAX/MJX to PyTorch bridge is much slower than the JAX-native
+   baseline.
 
-```powershell
-uv run python eval/build_demo_video.py
-```
+## Final checks
+
+- Show the updated `benchmark_comparison.png`, not the retired synthetic plot.
+- Say “stock reward for training” and “shared command-tracking metric for
+  evaluation”; do not call the evaluator return the native task reward.
+- State that the demo is simulation-only and do not imply sim-to-real transfer.

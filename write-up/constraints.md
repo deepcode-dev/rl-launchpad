@@ -1,3 +1,3 @@
 # Constraints
 
-PyTorch policy optimization uses an RTX 3070, while native Windows JAX exposes MJX on CPU. Reported wall time therefore includes host transfers and is not an all-GPU throughput claim. The viewer is display-only, so mouse pushes do not perturb policy physics. See the generated submission for measured step budgets and wall times.
+The final cluster jobs ran on NVIDIA H100 NVL GPUs. The custom trainer still crosses the JAX MJX and PyTorch boundary, so its 13,434–13,872 second per-seed wall times include interop overhead and are not an optimized all-GPU claim. The documented Brax reference takes 589.3 seconds for its 200M run. The viewer is display-only, so mouse pushes do not perturb policy physics. See `submission.md` and checkpoint metadata for the step budgets and custom wall times.
