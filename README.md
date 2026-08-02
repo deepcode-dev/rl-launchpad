@@ -18,6 +18,11 @@ metric; training itself uses the stock `state.reward`.
 
 ## Judge quickstart
 
+For the full reviewer walkthrough, read [`docs/judge-guide.md`](docs/judge-guide.md).
+It explains the recommended reading order, how to reproduce custom and Brax
+seed evaluations, how to inspect the saved evidence, and how to drive both
+policies interactively.
+
 ```powershell
 # Install pinned dependencies
 uv sync --extra dev --locked
