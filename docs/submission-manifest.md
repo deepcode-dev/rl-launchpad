@@ -29,8 +29,8 @@ it can be included if desired.
 - `write-up/policy-footage.mp4` â€” concatenated source footage from those three seeds
 - `write-up/demo-script.md` â€” reproducible capture commands and video contract
 
-Spoken narration is optional and is not used by the current demo. Do not use
-the older unreferenced GIF as evidence.
+Spoken narration is optional and is not used by the current demo. The older
+diagnostic media is not part of the evidence.
 
 ## Before final upload
 

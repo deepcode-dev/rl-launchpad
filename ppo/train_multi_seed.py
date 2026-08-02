@@ -112,6 +112,7 @@ def train_single_seed(seed, config):
         hidden_sizes=hidden_sizes,
     ).to(device)
     initial_steps = 0
+    checkpoint_dir = config.get("checkpoint_dir", "checkpoints/ppo_v2")
     resume_checkpoint = config.get("resume_checkpoint")
     if config.get("resume") and not resume_checkpoint:
         auto_ckpt = os.path.join(checkpoint_dir, f"ppo_seed{seed}.pt")

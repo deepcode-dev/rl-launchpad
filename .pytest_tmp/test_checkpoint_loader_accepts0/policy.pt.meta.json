@@ -1,1 +1,0 @@
-{"training_contract": "custom-ppo-privileged-critic-tracking-v3", "env_name": "Go1JoystickFlatTerrain", "obs_dim": 8, "act_dim": 3, "hidden_dim": 16}

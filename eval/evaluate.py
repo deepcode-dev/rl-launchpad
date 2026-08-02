@@ -275,7 +275,7 @@ def evaluate_policy(
         "mean_latency_ms": float(np.mean(step_latencies_ms)),
         "p95_latency_ms": float(np.percentile(step_latencies_ms, 95)),
         "episode_rewards": [float(r) for r in episode_rewards],
-        "episode_lengths": [int(l) for l in episode_lengths],
+        "episode_lengths": [int(episode_length) for episode_length in episode_lengths],
         "episode_linear_velocity_errors": episode_linear_velocity_errors,
         "episode_yaw_rate_errors": episode_yaw_rate_errors,
     }

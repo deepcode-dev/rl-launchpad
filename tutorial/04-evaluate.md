@@ -61,18 +61,8 @@ uv run python eval/eval_all_seeds.py
 It refuses to run if any configured seed checkpoint is missing (no partial
 multi-seed results).
 
-## `eval/eval_200m_seeds.py`
-
-Hard-coded evaluator for the older 200M cluster seeds `[10, 20, 30]`
-(`checkpoints/cluster_100m_v2/ppo_seed<seed>.pt`). Prints per-seed results and a
-grand mean, and writes `checkpoints/cluster_100m_v2/eval_200m_summary.json`:
-
-```powershell
-uv run python eval/eval_200m_seeds.py
-```
-
-> The champion set summary (`NEW_checkpoints/ppo_v2/ppo_v2_eval_summary.json`)
-> is built by `scratch/build_ppo_v2_summary.py`, not by this script.
+The champion set summary (`NEW_checkpoints/ppo_v2/ppo_v2_eval_summary.json`)
+is built by `scratch/build_ppo_v2_summary.py`.
 
 ## `eval/validate_submission.py`
 

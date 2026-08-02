@@ -59,9 +59,9 @@ def save_checkpoint(
 def train_single_seed(seed, config, resume=False):
     """Train a single PPO seed using the exact Champion PPO v2 engine."""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"\n=======================================================", flush=True)
+    print("\n=======================================================", flush=True)
     print(f"  Training Seed {seed} on Device: {device}", flush=True)
-    print(f"=======================================================", flush=True)
+    print("=======================================================", flush=True)
 
     torch.manual_seed(seed)
     np.random.seed(seed)
