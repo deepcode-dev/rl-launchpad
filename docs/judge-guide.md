@@ -13,11 +13,10 @@ Use this order if you want to understand the project efficiently:
 | ---: | --- | --- |
 | 1 | [README.md](../README.md) | What the project does, headline results, and quickstart |
 | 2 | [write-up/submission.md](../write-up/submission.md) | Full method, reward, comparison, limitations, and claims |
-| 3 | [write-up/rl_code_walkthrough.md](../write-up/rl_code_walkthrough.md) | File-by-file explanation of the implementation |
-| 4 | [docs/submission-audit.md](submission-audit.md) | Requirement status, validation commands, and disclosed caveats |
-| 5 | Run the validation command below | Whether the committed evidence satisfies the submission contract |
-| 6 | Run one custom and one Brax evaluation | How the final numbers are produced |
-| 7 | Launch a viewer | How to inspect the learned behavior interactively |
+| 3 | [docs/submission-audit.md](submission-audit.md) | Requirement status, validation commands, and disclosed caveats |
+| 4 | Run the validation command below | Whether the committed evidence satisfies the submission contract |
+| 5 | Run one custom and one Brax evaluation | How the final numbers are produced |
+| 6 | Launch a viewer | How to inspect the learned behavior interactively |
 
 The three most important implementation files are:
 
