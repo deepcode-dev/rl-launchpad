@@ -153,7 +153,7 @@ def record_native_demo_video(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Record silky-smooth native MuJoCo video.")
     parser.add_argument("checkpoint")
-    parser.add_argument("--output", default="write-up/demo-seed9033.mp4")
+    parser.add_argument("--output", default="write-up/demo-seed13039.mp4")
     parser.add_argument("--command", nargs=3, type=float, default=(1.0, 0.0, 0.0))
     parser.add_argument("--max-steps", type=int, default=500)
     parser.add_argument("--fps", type=int, default=50)

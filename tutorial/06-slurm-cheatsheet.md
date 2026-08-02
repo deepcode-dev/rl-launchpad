@@ -19,7 +19,7 @@ sbatch --export=ALL,CONFIG_PATH=configs/cluster_20m.yaml,TRAIN_SEED=10 \
   cluster/train_go1.slurm
 
 # Custom PyTorch PPO — resume
-sbatch --export=ALL,CONFIG_PATH=configs/cluster_200m.yaml,TRAIN_SEED=10,RESUME=true \
+sbatch --export=ALL,CONFIG_PATH=configs/cluster_131k_v2.yaml,TRAIN_SEED=13039,RESUME=true \
   cluster/train_go1.slurm
 
 # Brax baseline — ALWAYS override the GPU type (a100-80 never queues)
@@ -41,8 +41,8 @@ Environment variables consumed by the slurm scripts:
 Submit one job per seed so each has its own GPU:
 
 ```bash
-for s in 9001 9002 9003; do
-  sbatch --export=ALL,CONFIG_PATH=configs/champion_v2.yaml,TRAIN_SEED=$s \
+for s in 13039 13079 13027; do
+  sbatch --export=ALL,CONFIG_PATH=configs/cluster_131k_v2.yaml,TRAIN_SEED=$s \
     cluster/train_go1.slurm
 done
 ```

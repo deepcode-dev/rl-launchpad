@@ -5,18 +5,16 @@ metadata:
 
 | Seed | Environment steps | Wall time |
 |---:|---:|---:|
-| 9033 | 199,884,800 | 13,502.3 s |
-| 9006 | 199,884,800 | 13,434.3 s |
-| 9018 | 199,884,800 | 13,872.3 s |
-| 9016 | 199,884,800 | 13,552.3 s |
-| 8009 | 199,884,800 | 13,443.6 s |
+| 13039 | 199,229,440 | 1,403.9 s |
+| 13079 | 199,229,440 | 1,424.3 s |
+| 13027 | 199,229,440 | 1,392.6 s |
 
-Mean custom time is 13,561.0 seconds per seed. The Brax baseline summary
-records the documented 589.3-second 200M run and identifies that the raw
-training log was not committed. Its final checkpoint is 200,540,160 steps,
-the nearest saved checkpoint after the 200,000,000-step training budget.
+Mean custom time is 1,407.0 seconds per seed, about 23.4 minutes. The Brax
+baseline summary records the documented 589.3-second 200M run and identifies
+that the raw training log was not committed. Its final checkpoint is
+200,540,160 steps, the nearest saved checkpoint after the 200,000,000-step
+training budget.
 
-The 131k-environment experiment reached 199,229,440 steps in approximately
-1,134.7 seconds, but its policy quality was poor. That result demonstrates
-that wall-clock throughput and learning quality are separate axes; it is not
-used in the final benchmark.
+The selected 131k-v2 runs use 131,072 environments, 760 epochs, eight PPO
+passes, and batch size 16,384. The earlier fast-but-poor candidates are not
+part of the final benchmark.

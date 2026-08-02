@@ -135,7 +135,7 @@ def main() -> None:
 
     # This is a true shared metric: both implementations report mean linear
     # velocity tracking error. The custom line is a mean +/- SD over the
-    # five measured stdout histories; the Brax points are mean +/- SD over
+    # three measured stdout histories; the Brax points are mean +/- SD over
     # three seeds.
     custom_steps_raw = [np.asarray(history["total_steps"], dtype=np.float64) for history in histories]
     common_steps = custom_steps_raw[0]

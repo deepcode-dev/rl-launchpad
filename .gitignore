@@ -32,16 +32,21 @@ NEW_checkpoints/ppo_v2/ppo_seed6*
 NEW_checkpoints/ppo_v2/ppo_seed7*
 NEW_checkpoints/ppo_v2/ppo_seed80*
 NEW_checkpoints/ppo_v2/ppo_seed90*
-# ...but keep the champion checkpoint and sidecars for already-tracked checkpoints
-!NEW_checkpoints/ppo_v2/ppo_seed8009.pt.meta.json
-!NEW_checkpoints/ppo_v2/ppo_seed9033.pt
-!NEW_checkpoints/ppo_v2/ppo_seed9033.pt.meta.json
-!NEW_checkpoints/ppo_v2/ppo_seed9033_eval.json
-!NEW_checkpoints/ppo_v2/ppo_seed9002.pt.meta.json
-!NEW_checkpoints/ppo_v2/ppo_seed9003.pt.meta.json
-!NEW_checkpoints/ppo_v2/ppo_seed9006.pt.meta.json
-!NEW_checkpoints/ppo_v2/ppo_seed9016.pt.meta.json
-!NEW_checkpoints/ppo_v2/ppo_seed9018.pt.meta.json
+# Keep only the three selected 131k-v2 checkpoints and their evidence.
+NEW_checkpoints/ppo_v2/ppo_seed1*
+!NEW_checkpoints/ppo_v2/ppo_seed13027.pt
+!NEW_checkpoints/ppo_v2/ppo_seed13027.pt.meta.json
+!NEW_checkpoints/ppo_v2/ppo_seed13027_eval.json
+!NEW_checkpoints/ppo_v2/ppo_seed13039.pt
+!NEW_checkpoints/ppo_v2/ppo_seed13039.pt.meta.json
+!NEW_checkpoints/ppo_v2/ppo_seed13039_eval.json
+!NEW_checkpoints/ppo_v2/ppo_seed13079.pt
+!NEW_checkpoints/ppo_v2/ppo_seed13079.pt.meta.json
+!NEW_checkpoints/ppo_v2/ppo_seed13079_eval.json
+slurm-v2-131k-s13*.out
+!slurm-v2-131k-s13027-710544.out
+!slurm-v2-131k-s13039-710571.out
+!slurm-v2-131k-s13079-710876.out
 
 # Scratch output artifacts
 scratch/*.log

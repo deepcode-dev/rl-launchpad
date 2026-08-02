@@ -3,15 +3,19 @@ import json
 import os
 import numpy as np
 
+CANONICAL_SEEDS = [13039, 13079, 13027]
+
 def main():
     print("========================================================================================")
     print("        AUTOMATIC PPO v2 CHAMPION EVALUATION SUMMARY BUILDER                           ")
     print("========================================================================================")
 
-    # 1. Discover all evaluation JSON files in NEW_checkpoints/ppo_v2/
-    eval_jsons = glob.glob("NEW_checkpoints/ppo_v2/*_eval.json")
-    if not eval_jsons:
-        eval_jsons = glob.glob("NEW_checkpoints/**/*_eval.json", recursive=True)
+    # 1. Load only the three selected 131k-v2 submission seeds. Do not infer
+    # the benchmark from every exploratory candidate in the directory.
+    eval_jsons = [
+        f"NEW_checkpoints/ppo_v2/ppo_seed{seed}_eval.json"
+        for seed in CANONICAL_SEEDS
+    ]
 
     if not eval_jsons:
         print("❌ No evaluation JSON files found! Run 'python scratch/eval_all_ppo_v2_seeds.py' first.")
@@ -42,11 +46,12 @@ def main():
         except Exception as e:
             pass
 
-    # 3. Sort by lowest linear velocity error (best tracking precision)
-    parsed_seeds.sort(key=lambda x: x["mean_linear_velocity_error"])
-
-    # 4. Automatically pick the top 5 champion seeds
-    top_seeds = parsed_seeds[:min(5, len(parsed_seeds))]
+    # 3. Preserve the declared benchmark order and require all three files.
+    parsed_by_seed = {item["seed"]: item for item in parsed_seeds}
+    missing = [seed for seed in CANONICAL_SEEDS if seed not in parsed_by_seed]
+    if missing:
+        raise FileNotFoundError(f"Missing canonical evaluation seeds: {missing}")
+    top_seeds = [parsed_by_seed[seed] for seed in CANONICAL_SEEDS]
     target_seed_numbers = [item["seed"] for item in top_seeds]
 
     returns = [item["mean_reward"] for item in top_seeds]
@@ -54,7 +59,7 @@ def main():
     lin_errs = [item["mean_linear_velocity_error"] for item in top_seeds]
     yaw_errs = [item["mean_yaw_rate_error"] for item in top_seeds]
 
-    print(f"Automatically selected Top {len(top_seeds)} Champion Seeds: {target_seed_numbers}\n")
+    print(f"Using canonical 131k-v2 seeds: {target_seed_numbers}\n")
     for item in top_seeds:
         print(f"  Seed {item['seed']:<5} | Return: {item['mean_reward']:7.4f} +/- {item['std_reward']:.4f} | LinErr: {item['mean_linear_velocity_error']:6.4f} m/s | YawErr: {item['mean_yaw_rate_error']:6.4f} rad/s")
 

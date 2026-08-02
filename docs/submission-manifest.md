@@ -1,22 +1,21 @@
 # Submission manifest
 
 Use this list when preparing the RL sponsored-track upload. The repository
-must include the source, pinned environment, canonical evaluation summaries,
-and plot. The video is a separate deliverable but is also unignored locally so
-it can be included if desired.
+contains the source, pinned environment, canonical evaluation summaries, and
+measured plot. The video is also present locally for the separate upload.
 
 ## Repository link
 
 - `README.md`
-- `pyproject.toml`
-- `uv.lock`
+- `pyproject.toml`, `uv.lock`
 - `ppo/agent.py`, `ppo/ppo.py`, `ppo/env.py`, `ppo/train_multi_seed.py`
-- `configs/champion_v2.yaml`
+- `configs/cluster_131k_v2.yaml`
 - `eval/evaluate.py`, `eval/validate_submission.py`, `eval/plot_benchmark.py`
 - `cluster/train_brax_go1.py` as baseline-only code
-- `NEW_checkpoints/ppo_v2/ppo_seed9033.pt` and its sidecar metadata
-- All five canonical custom evaluation JSON files and
-  `NEW_checkpoints/ppo_v2/ppo_v2_eval_summary.json`
+- `NEW_checkpoints/ppo_v2/ppo_v2_eval_summary.json`
+- `NEW_checkpoints/ppo_v2/ppo_multi_seed_results.json`
+- The three selected checkpoint/evaluation pairs for seeds 13039, 13079, and
+  13027, including their `.pt.meta.json` sidecars
 - `baselines/brax_go1_200m_eval_summary.json`
 - `baselines/brax_go1_200m_ema_ablation.json`
 - `write-up/benchmark_comparison.png`
@@ -25,21 +24,21 @@ it can be included if desired.
 
 ## Separate demo upload
 
-- `write-up/demo.mp4` â€” current 120-second captioned six-clip montage of seeds 9033, 9016, and 8009
-- `write-up/policy-footage.mp4` â€” concatenated source footage from those three seeds
-- `write-up/demo-script.md` â€” reproducible capture commands and video contract
+- `write-up/demo.mp4` — captioned two-minute six-clip montage of seeds 13039,
+  13079, and 13027
+- `write-up/policy-footage.mp4` — concatenated source footage from those seeds
+- `write-up/demo-script.md` — reproducible capture commands and video contract
 
-Spoken narration is optional and is not used by the current demo. The older
+Spoken narration is optional and is not used by the current demo. Older
 diagnostic media is not part of the evidence.
 
 ## Before final upload
 
-1. Use the captioned `demo.mp4`; it contains six labeled deterministic
-   evaluation-style command clips from reported checkpoints: two 1,000-step episodes for each seed.
-2. Add at least two more complete custom training histories if the 131k-v2
-   result becomes official, then rerun `eval/plot_benchmark.py` so the custom
-   curve has mean and standard deviation across seeds.
-3. Add the raw Brax training log if it is available.
+1. Use the captioned `demo.mp4`; it contains two 1,000-step deterministic
+   evaluation-style command episodes for each reported seed.
+2. Rerun `eval/plot_benchmark.py` after any seed or history change.
+3. Add the raw Brax training log only if it becomes available; its absence is
+   already disclosed in the write-up.
 4. Stage the final files and run:
 
 ```powershell

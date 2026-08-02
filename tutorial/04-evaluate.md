@@ -25,8 +25,8 @@ Every reported number uses the same protocol:
 | `--num-episodes` | `50` | number of episodes |
 
 ```powershell
-uv run python eval/evaluate.py --checkpoint NEW_checkpoints/ppo_v2/ppo_seed9033.pt
-uv run python eval/evaluate.py --checkpoint NEW_checkpoints/ppo_v2/ppo_seed9033.pt --num-episodes 50
+uv run python eval/evaluate.py --checkpoint NEW_checkpoints/ppo_v2/ppo_seed13039.pt
+uv run python eval/evaluate.py --checkpoint NEW_checkpoints/ppo_v2/ppo_seed13039.pt --num-episodes 50
 ```
 
 Writes `<stem>_eval.json` next to the checkpoint: per-episode rewards/lengths,

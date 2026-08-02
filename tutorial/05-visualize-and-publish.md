@@ -8,7 +8,7 @@ run the policy inside native C++ MuJoCo, and open a window.
 ### `eval/view_native_v2.py` â€” champion custom PPO (recommended)
 
 ```powershell
-uv run python eval/view_native_v2.py NEW_checkpoints/ppo_v2/ppo_seed9033.pt
+uv run python eval/view_native_v2.py NEW_checkpoints/ppo_v2/ppo_seed13039.pt
 ```
 
 | CLI | Default | Meaning |
@@ -52,14 +52,14 @@ uv run python eval/view_brax_native.py baselines/brax_go1_200m/000200540160 --co
 ### `eval/record_native_video.py` â€” silky native MuJoCo video
 
 ```powershell
-uv run python eval/record_native_video.py NEW_checkpoints/ppo_v2/ppo_seed9033.pt `
-  --output write-up/demo-seed9033.mp4 --command 1.0 0.0 0.0 --max-steps 1000 --fps 50
+uv run python eval/record_native_video.py NEW_checkpoints/ppo_v2/ppo_seed13039.pt `
+  --output write-up/demo-seed13039.mp4 --command 1.0 0.0 0.0 --max-steps 1000 --fps 50
 ```
 
 | CLI | Default | Meaning |
 | --- | --- | --- |
 | `checkpoint` | *(positional)* | policy |
-| `--output` | `write-up/demo-seed9033.mp4` | output path |
+| `--output` | `write-up/demo-seed13039.mp4` | output path |
 | `--command` | `1.0 0.0 0.0` | `(VX, VY, YAW)` |
 | `--max-steps` | `1000` | episode length to render |
 | `--fps` | `50` | frames per second |
@@ -67,7 +67,7 @@ uv run python eval/record_native_video.py NEW_checkpoints/ppo_v2/ppo_seed9033.pt
 ### `eval/render_rollout.py` â€” single rollout images
 
 ```powershell
-uv run python eval/render_rollout.py NEW_checkpoints/ppo_v2/ppo_seed9033.pt
+uv run python eval/render_rollout.py NEW_checkpoints/ppo_v2/ppo_seed13039.pt
 ```
 
 (`checkpoint`, `--seed` [default `20000`], `--config` [default `configs/default.yaml`].)

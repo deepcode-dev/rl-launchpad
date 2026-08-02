@@ -1,6 +1,6 @@
 """Audit the canonical Launchpad RL-track submission artifacts.
 
-This validator checks the current five-seed custom result against the current
+This validator checks the current three-seed custom result against the current
 three-seed Brax result and verifies the demo when requested.
 """
 
@@ -18,11 +18,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CUSTOM_SUMMARY_PROTOCOL = "custom-ppo-v2-champion"
 CUSTOM_EVAL_PROTOCOL = "custom-ppo-command-tracking-v2"
 BASELINE_PROTOCOL = "brax-ppo-command-tracking-v2"
-CUSTOM_SEEDS = [9033, 9006, 9018, 9016, 8009]
+CUSTOM_SEEDS = [13039, 13079, 13027]
 BASELINE_SEEDS = [10, 11, 12]
 EVAL_SEED = 20_000
 EVAL_EPISODES = 50
-CUSTOM_STEPS = 199_884_800
+CUSTOM_STEPS = 199_229_440
 BASELINE_BUDGET = 200_000_000
 
 
@@ -218,8 +218,8 @@ def validate_demo(require_demo: bool) -> list[str]:
     # Spoken narration is optional. The submission requirement is a playable
     # video; the current demo uses on-screen seed and command captions instead.
     script = (PROJECT_ROOT / "write-up" / "demo-script.md").read_text(encoding="utf-8")
-    if "ppo_seed9033.pt" not in script:
-        raise ValueError("Demo script does not identify the reported seed 9033 checkpoint")
+    if "ppo_seed13039.pt" not in script:
+        raise ValueError("Demo script does not identify the reported seed 13039 checkpoint")
     return warnings
 
 

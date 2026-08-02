@@ -1,10 +1,13 @@
-# From-Scratch PPO for Command-Conditioned Go1 Locomotion
+# From-scratch PPO for command-conditioned Go1 locomotion
 
-## Problem
+## Problem and approach
 
-Can a small, auditable PPO implementation written from scratch learn the stock MuJoCo Playground `Go1JoystickFlatTerrain` task? I evaluate that question against the established Brax PPO implementation on the same 48-dimensional actor observation, 12-dimensional normalized action space, 1,000-step episode limit, command distribution, deterministic evaluator, and held-out episode seeds.
-
-## Approach and architecture
+This project asks whether a small, auditable PPO implementation can learn the
+stock MuJoCo Playground `Go1JoystickFlatTerrain` task. The policy tracks
+forward, lateral, and yaw velocity commands while keeping the quadruped
+upright. I compare it with the established Brax PPO baseline using the same
+task, actor dimensions, action dimensions, fixed evaluation episodes, and
+deterministic command-tracking metrics.
 
 ```mermaid
 graph LR
@@ -12,35 +15,83 @@ graph LR
   A --> D[tanh-squashed Gaussian]
   D --> F[0.7/0.3 EMA action filter]
   F --> U[12 joint-target offsets]
-  P[123-dim privileged training observation] --> C[MLP 512-256-128, SiLU]
+  P[123-dim privileged critic observation] --> C[MLP 512-256-128, SiLU]
   C --> V[Value estimate]
 ```
 
-The actor and critic are separate PyTorch networks. The actor sees only policy-available state; the critic additionally sees privileged simulator state during training. PPO, minibatch updates, clipped ratios, Adam, and GAE are implemented in `ppo/ppo.py` and `ppo/train_multi_seed.py`; no policy is trained with SB3, RSL-RL, RL-Games, SKRL, CleanRL, or a Brax trainer. Brax is a baseline only.
-
-Rollouts remain shaped `[time, environment]` while GAE is computed, then are flattened for updates. The policy uses `gamma=0.97`, `lambda=0.95`, four PPO passes, batch size 5,120, `clip_ratio=0.2`, and a fixed entropy coefficient of 0.01. Checkpoints include the running observation statistics and the complete YAML configuration.
+The actor and critic are separate PyTorch networks. PPO, clipped ratios,
+Adam, minibatches, and vectorized GAE are implemented from scratch in
+`ppo/ppo.py` and `ppo/train_multi_seed.py`; no policy is trained with SB3,
+RSL-RL, RL-Games, SKRL, CleanRL, or a Brax trainer. GAE remains shaped
+`[time, environment]` until trajectory calculations finish. The reported
+131k-v2 recipe uses 131,072 parallel environments, 262,144 rollout steps per
+epoch, 760 epochs, eight PPO passes, batch size 16,384, `gamma=0.97`,
+`lambda=0.95`, and `clip_ratio=0.2`.
 
 ## Reward and environment contract
 
-Training uses MuJoCo Playground's `state.reward` unchanged. Relative to the stock task, the custom training wrapper adds only vector-slot autoreset, explicit termination versus time-limit handling, a configurable observation-history wrapper, bounded normalized actions, and the 0.7/0.3 EMA post-processing used by the submitted policy. The evaluator uses native MuJoCo C physics and a shared command-tracking return, `max(0, 1 - ||v_xy-v_cmd||Â²) * control_dt`, plus linear-velocity and yaw-rate errors. This metric is deliberately stated separately from the stock training reward. The Brax baseline uses the same evaluator and observation/action dimensions, but its stock policy output has no custom EMA; that control-postprocessing difference is a declared limitation of this comparison.
+Training uses MuJoCo Playground's `state.reward` unchanged. The custom wrapper
+adds vector-slot autoreset, explicit termination versus time-limit handling,
+bounded normalized actions, and the declared 0.7/0.3 EMA action filter. The
+actor receives a 48-dimensional observation; the critic also receives a
+123-dimensional privileged observation during training. Checkpoints include
+normalization statistics and the complete YAML configuration.
+
+Final evaluation uses native MuJoCo C physics and a separate shared
+command-tracking return, `max(0, 1 - ||v_xy-v_cmd||^2) * control_dt`, plus
+linear-velocity and yaw-rate errors. It is not the stock training reward.
+Each seed is evaluated deterministically for 50 episodes using the fixed
+episode block 20,000-20,049; every reported episode reaches 1,000 steps.
 
 ## Evidence
 
-All custom checkpoints were trained for 199,884,800 environment steps per seed and evaluated deterministically for 50 episodes using the fixed block 20,000â€“20,049. The table's `Â±` values on individual rows are within-episode standard deviations; the aggregate `Â±` is the standard deviation of the independent seed means.
+| Agent | Seeds | Training budget | Wall time/seed | Return | LinErr | YawErr |
+|---|---|---:|---:|---:|---:|---:|
+| Custom PyTorch PPO | 13039, 13079, 13027 | 199,229,440 | 1,392.6-1,424.3 s; mean 1,407.0 s | **19.795 +/- 0.033** | **0.0722 m/s** | **0.0646 rad/s** |
+| Brax PPO baseline | 10, 11, 12 | 200,000,000 (200M) | documented 589.3 s | **19.821 +/- 0.016** | **0.0668 m/s** | **0.0454 rad/s** |
 
-| Agent | Seeds | Wall time/seed | Return | LinErr | YawErr | Length |
-|---|---:|---:|---:|---:|---:|---:|
-| Custom PyTorch PPO | 9033, 9006, 9018, 9016, 8009 | 13,434â€“13,872 s; mean 13,561 s | **19.752 Â± 0.020** | **0.0851 m/s** | **0.0676 rad/s** | 1,000 |
-| Brax PPO baseline | 10, 11, 12 | documented 589.3 s | **19.821 Â± 0.016** | **0.0668 m/s** | **0.0454 rad/s** | 1,000 |
+The custom result is the independent three-seed mean and standard deviation of
+seed means. The plot in `write-up/benchmark_comparison.png` uses the three
+measured custom histories (152 logged points per seed) and the measured Brax
+curve on a shared environment-step axis. A post-hoc EMA ablation is retained
+as a limitation: applying the custom EMA after training to stock Brax weights
+reduced performance, so it is not substituted for the established baseline.
 
-The custom agent reaches the horizon on every reported episode and is close to, but below, the faster Brax reference. The full per-episode JSON files, checkpoint metadata, seeds, and measured plot are present in the repository. I also ran a matched-postprocessing ablation: applying the custom EMA after training to stock Brax weights reduced Brax to **7.241 Â± 0.906** return and **380.6** steps, so it is not substituted for the established reference. A fully controlled EMA comparison would require retraining Brax with the filter inside its environment. The five canonical custom Slurm logs provide 244 measured points per seed from epoch 5 through epoch 1220; the plot reports their mean Â± seed standard deviation. The final benchmark statistics remain the primary multi-seed claim.
+## Demo, limitations, and next steps
 
-## Demo and constraints
+`write-up/demo.mp4` is a captioned, narration-free montage of seeds 13039,
+13079, and 13027. It contains two 1,000-step deterministic evaluation-style
+command clips per seed, with the exact command vector and 50-episode metrics
+shown on screen. The video is simulation-only and makes no sim-to-real claim.
 
-[`demo.mp4`](demo.mp4) is a 120-second captioned montage using the reported seeds 9033, 9016, and 8009. It shows two 1,000-step deterministic evaluation-style command episodes per seed, with the exact command vector and 50-episode evaluation metrics overlaid on screen; spoken narration is not required. Training ran on H100 NVL hardware; the custom implementation transfers between JAX MJX and PyTorch, while Brax keeps simulation and learning in JAX. That bridge explains the large latency gap: the recorded custom mean is about 13,561 s for 200M steps versus about 589 s for the documented Brax run. The video is simulation-only and makes no sim-to-real claim.
+### Honesty and trajectory
 
-## Honesty and trajectory
+Early versions failed because GAE crossed vector trajectories, terminal slots
+were not autoreset, reward semantics changed, and Gaussian actions were
+unbounded. Those failures and corrections are recorded in `docs/failures.md`.
+The 131k-v2 recipe fixed the earlier fast-but-poor configuration by retaining
+enough optimizer passes and uses a shorter rollout per environment; the three
+selected runs are now the final evidence. The main remaining limitation is
+the JAX MJX/PyTorch boundary, which explains why this trainer is slower than
+the all-JAX Brax reference. The next improvements are an all-GPU trainer,
+controlled EMA/no-EMA retraining, robustness tests with command perturbations,
+and hardware-in-the-loop validation.
 
-The first implementation mixed vector trajectories during GAE, failed to autoreset completed slots, changed reward semantics, and sent unbounded Gaussian actions. Those failures produced poor policies and are retained in `docs/failures.md`. Ten PPO passes also caused excessive clipping in the pilot; four passes were retained. The 131k-environment experiment reduced wall time to roughly 19 minutes but produced an awful policy because it reduced the number of optimizer epochs per fixed sample budget; it is not the submitted result.
+## Repository review guide and run instructions
 
-The next two-week plan is: (1) profile and remove the JAX/PyTorch boundary while preserving the from-scratch PPO loss; (2) report a controlled EMA/no-EMA baseline ablation; (3) add command perturbations and push robustness; and (4) add a hardware-in-the-loop check before making any deployment claim.
+- `ppo/agent.py`, `ppo/ppo.py`, `ppo/env.py` — from-scratch networks, PPO loss,
+  GAE, and environment contract.
+- `configs/cluster_131k_v2.yaml` — reported fast training recipe.
+- `NEW_checkpoints/ppo_v2/ppo_v2_eval_summary.json` — three-seed aggregate.
+- `NEW_checkpoints/ppo_v2/ppo_seed13039_eval.json` (and the 13079/13027 files)
+  — complete deterministic episode evidence.
+- `NEW_checkpoints/ppo_v2/ppo_multi_seed_results.json` — measured training
+  histories used for the curve.
+- `eval/validate_submission.py` — reproducibility and submission audit.
+- `baselines/` — baseline-only Brax evidence and its disclosed EMA ablation.
+
+After installing the pinned dependencies with `uv sync --extra dev --locked`,
+run `uv run python eval/validate_submission.py --require-demo --strict`.
+The project depends on MuJoCo Playground, JAX, PyTorch, and a local GPU for
+training; no external service, API key, password, personal data, or mocked
+result is required for the committed evaluation artifacts.

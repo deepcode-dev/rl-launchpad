@@ -54,9 +54,16 @@ def make_silent_audio(path: Path, duration: float, sample_rate: int = 16_000) ->
 
 def build_demo(policy_footage: Path, narration: Path | None, output: Path, *, silent: bool = False) -> None:
     if silent:
-        duration = 107.0
+        duration = 119.8
         narration = PROJECT_ROOT / "write-up" / "demo-silence.wav"
         make_silent_audio(narration, duration)
+        run_ffmpeg([
+            "-i", str(policy_footage), "-i", str(narration),
+            "-t", f"{duration:.3f}", "-map", "0:v:0", "-map", "1:a:0",
+            "-c:v", "copy", "-c:a", "aac", "-b:a", "64k", str(output),
+        ])
+        print(f"Built captioned demo ({duration:.1f}s): {output}")
+        return
     if narration is None:
         raise ValueError("Provide --narration or use --silent")
     duration = audio_duration(narration)
@@ -66,12 +73,12 @@ def build_demo(policy_footage: Path, narration: Path | None, output: Path, *, si
     assets.mkdir(parents=True, exist_ok=True)
 
     slides = [
-        ("title", "From-Scratch PPO for Go1", ["Five custom seeds · 200M steps each", "Fifty fixed held-out episodes per seed"]),
+        ("title", "From-Scratch PPO for Go1", ["Three custom seeds · 199.2M steps each", "Fifty fixed held-out episodes per seed"]),
         ("failures", "Why the first policy failed", ["GAE crossed vector trajectories", "Terminal robots never reset", "Reward semantics changed", "Gaussian actions were unbounded"]),
         ("contract", "Corrected training contract", ["48-dim actor · 123-dim privileged critic", "GAE stays [time, environment]", "Stock reward for training; shared metric for eval", "Tanh actions · declared 0.7/0.3 EMA filter"]),
-        ("loss", "PPO update in one line", ["L = -min(rA, clip(r, 0.8, 1.2)A)", "+ 0.5 Huber(V, target) - 0.01 entropy", "GAE is computed before flattening", "Four update passes · batch size 5,120"]),
-        ("result", "Measured held-out result", ["Custom: 19.752 +/- 0.020 return · LinErr 0.0851", "Brax: 19.821 +/- 0.016 return · LinErr 0.0668", "200M steps · 5 custom / 3 baseline seeds", "Every reported episode reached 1,000 steps"]),
-        ("limits", "What this does not prove", ["Custom mean training time: 13,561 seconds", "Brax reference: documented 589.3 seconds", "Curve logs are sampled every five epochs", "Simulation only; no sim-to-real claim"]),
+        ("loss", "PPO update in one line", ["L = -min(rA, clip(r, 0.8, 1.2)A)", "+ 0.5 Huber(V, target) - 0.01 entropy", "GAE is computed before flattening", "Eight update passes · batch size 16,384"]),
+        ("result", "Measured held-out result", ["Custom: 19.795 +/- 0.033 return · LinErr 0.0722", "Brax: 19.821 +/- 0.016 return · LinErr 0.0668", "199.2M steps · 3 custom / 3 baseline seeds", "Every reported episode reached 1,000 steps"]),
+        ("limits", "What this does not prove", ["Custom mean training time: 1,407 seconds", "Brax reference: documented 589.3 seconds", "Curve logs are sampled every five epochs", "Simulation only; no sim-to-real claim"]),
     ]
     slide_paths: dict[str, Path] = {}
     for name, title, lines in slides:

@@ -1,22 +1,22 @@
-# Submission configuration: Go1 locomotion with the stock native reward.
+# Reported 131k-v2 submission configuration.
 env_name: "Go1JoystickFlatTerrain"
-seed: 10
-seeds: [10, 20, 30]
-num_envs: 8192
+seed: 13039
+seeds: [13039, 13079, 13027]
+num_envs: 131072
 history_len: 1
 episode_length: 1000
-steps_per_epoch: 163840
-epochs: 1220
-total_timesteps_per_seed: 199884800
-total_timesteps: 599654400          # 3 seeds * ~200M steps/seed
+steps_per_epoch: 262144
+epochs: 760
+total_timesteps_per_seed: 199229440
+total_timesteps: 597688320
 gamma: 0.97
 lam: 0.95
 clip_ratio: 0.2
 pi_lr: 0.0003
 target_kl: 0.02
 max_grad_norm: 1.0
-train_iters: 4
-batch_size: 5120
+train_iters: 8
+batch_size: 16384
 hidden_dim: 512
 hidden_sizes: [512, 256, 128]
 vf_coef: 0.5

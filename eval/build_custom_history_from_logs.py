@@ -47,8 +47,8 @@ def parse_log(path: Path) -> dict:
     seed = int(rows[0]["seed"])
     if any(int(row["seed"]) != seed for row in rows):
         raise ValueError(f"Multiple seeds found in {path}")
-    if rows[-1]["steps"] != 199_884_800:
-        raise ValueError(f"{path} does not reach the 199,884,800-step budget")
+    if rows[-1]["steps"] != 199_229_440:
+        raise ValueError(f"{path} does not reach the 199,229,440-step budget")
 
     def values(key: str) -> list[float | int]:
         return [row[key] for row in rows]
@@ -69,7 +69,7 @@ def parse_log(path: Path) -> dict:
         "total_steps": values("steps"),
         "wall_times": values("time"),
         "source_log": path.name,
-        "sampling_note": "Measured stdout metrics emitted every 5 training epochs.",
+        "sampling_note": "Measured stdout metrics emitted every 5 training epochs from the 131k-v2 recipe.",
     }
 
 
