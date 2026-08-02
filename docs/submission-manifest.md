@@ -25,23 +25,22 @@ it can be included if desired.
 
 ## Separate demo upload
 
-- `write-up/demo.mp4` — current 88-second narrated demo
-- `write-up/policy-footage.mp4` — seed 9033 source footage
-- `write-up/demo-narration.txt` — transcript used to generate the narration
+- `write-up/demo.mp4` â€” current 120-second captioned six-clip montage of seeds 9033, 9016, and 8009
+- `write-up/policy-footage.mp4` â€” concatenated source footage from those three seeds
+- `write-up/demo-script.md` â€” reproducible capture commands and video contract
 
-Do not upload `write-up/demo-narration.wav`; the local file is an invalid
-46-byte failed TTS output. Do not use the older unreferenced GIF as evidence.
+Spoken narration is optional and is not used by the current demo. Do not use
+the older unreferenced GIF as evidence.
 
 ## Before final upload
 
-1. Use the committed 88-second narrated `demo.mp4`; it already includes the
-   narration WAV and three labeled evaluation-style command clips from the
-   reported seed 9033 checkpoint.
-2. Add at least two more complete custom training histories, then rerun
-   `eval/plot_benchmark.py` so the custom curve has mean and standard
-   deviation across seeds.
+1. Use the captioned `demo.mp4`; it contains six labeled deterministic
+   evaluation-style command clips from reported checkpoints: two 1,000-step episodes for each seed.
+2. Add at least two more complete custom training histories if the 131k-v2
+   result becomes official, then rerun `eval/plot_benchmark.py` so the custom
+   curve has mean and standard deviation across seeds.
 3. Add the raw Brax training log if it is available.
-4. Stage the new files that are currently untracked, then run:
+4. Stage the final files and run:
 
 ```powershell
 .venv\Scripts\python.exe eval\validate_submission.py --require-demo --strict

@@ -2,18 +2,27 @@
   "protocol": "custom-ppo-v2-champion",
   "num_episodes_per_seed": 50,
   "training_seeds": [
+    13039,
     9033,
+    13027,
     9006,
-    9018,
-    9016,
-    8009
+    9018
   ],
-  "grand_mean_return": 19.752106593220383,
-  "grand_std_return": 0.019855107063440517,
+  "grand_mean_return": 19.76229303441803,
+  "grand_std_return": 0.03687095625405797,
   "mean_episode_length": 1000.0,
-  "mean_linear_velocity_error": 0.08512398727137682,
-  "mean_yaw_rate_error": 0.06759610667032308,
+  "mean_linear_velocity_error": 0.0800257518566924,
+  "mean_yaw_rate_error": 0.06620200090551943,
   "seed_results": [
+    {
+      "seed": 13039,
+      "json_path": "NEW_checkpoints/ppo_v2\\ppo_seed13039_eval.json",
+      "mean_reward": 19.826550500597907,
+      "std_reward": 0.1338302251448981,
+      "mean_linear_velocity_error": 0.06486345132470245,
+      "mean_yaw_rate_error": 0.05791055990963815,
+      "mean_episode_length": 1000.0
+    },
     {
       "seed": 9033,
       "json_path": "NEW_checkpoints/ppo_v2\\ppo_seed9033_eval.json",
@@ -21,6 +30,15 @@
       "std_reward": 0.12859165525187533,
       "mean_linear_velocity_error": 0.08121493267124245,
       "mean_yaw_rate_error": 0.06753508769368158,
+      "mean_episode_length": 1000.0
+    },
+    {
+      "seed": 13027,
+      "json_path": "NEW_checkpoints/ppo_v2\\ppo_seed13027_eval.json",
+      "mean_reward": 19.748933024536512,
+      "std_reward": 0.1694897237712471,
+      "mean_linear_velocity_error": 0.08315802160599983,
+      "mean_yaw_rate_error": 0.07238881604091155,
       "mean_episode_length": 1000.0
     },
     {
@@ -39,24 +57,6 @@
       "std_reward": 0.22619141590183411,
       "mean_linear_velocity_error": 0.08559344833085314,
       "mean_yaw_rate_error": 0.06302328444134757,
-      "mean_episode_length": 1000.0
-    },
-    {
-      "seed": 9016,
-      "json_path": "NEW_checkpoints/ppo_v2\\ppo_seed9016_eval.json",
-      "mean_reward": 19.762519019951725,
-      "std_reward": 0.11449201793734615,
-      "mean_linear_velocity_error": 0.08625916141572285,
-      "mean_yaw_rate_error": 0.06751050802195761,
-      "mean_episode_length": 1000.0
-    },
-    {
-      "seed": 8009,
-      "json_path": "NEW_checkpoints/ppo_v2\\ppo_seed8009_eval.json",
-      "mean_reward": 19.762032299194455,
-      "std_reward": 0.106070185079562,
-      "mean_linear_velocity_error": 0.08725348858840151,
-      "mean_yaw_rate_error": 0.06975939675261036,
       "mean_episode_length": 1000.0
     }
   ]

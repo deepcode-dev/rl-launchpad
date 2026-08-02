@@ -71,7 +71,7 @@
   "seed_results": [
     {
       "protocol": "brax-ppo-command-tracking-v2",
-      "checkpoint": "C:\\Users\\ravid\\Desktop\\rl-launchpad\\baselines\\brax_go1_200m\\000200540160",
+      "checkpoint": "baselines/brax_go1_200m/000200540160",
       "training_seed": 10,
       "checkpoint_step": 200540160,
       "eval_seed": 20000,
@@ -345,7 +345,7 @@
     },
     {
       "protocol": "brax-ppo-command-tracking-v2",
-      "checkpoint": "C:\\Users\\ravid\\Desktop\\rl-launchpad\\baselines\\brax_go1_200m_seed11\\000200540160",
+      "checkpoint": "baselines/brax_go1_200m_seed11/000200540160",
       "training_seed": 11,
       "checkpoint_step": 200540160,
       "eval_seed": 20000,
@@ -619,7 +619,7 @@
     },
     {
       "protocol": "brax-ppo-command-tracking-v2",
-      "checkpoint": "C:\\Users\\ravid\\Desktop\\rl-launchpad\\baselines\\brax_go1_200m_seed12\\000200540160",
+      "checkpoint": "baselines/brax_go1_200m_seed12/000200540160",
       "training_seed": 12,
       "checkpoint_step": 200540160,
       "eval_seed": 20000,
@@ -909,7 +909,7 @@
       "seed_results": [
         {
           "protocol": "brax-ppo-command-tracking-v2",
-          "checkpoint": "C:\\Users\\ravid\\Desktop\\rl-launchpad\\baselines\\brax_go1_200m\\000050135040",
+          "checkpoint": "baselines/brax_go1_200m/000050135040",
           "training_seed": 10,
           "checkpoint_step": 50135040,
           "eval_seed": 20000,
@@ -1183,7 +1183,7 @@
         },
         {
           "protocol": "brax-ppo-command-tracking-v2",
-          "checkpoint": "C:\\Users\\ravid\\Desktop\\rl-launchpad\\baselines\\brax_go1_200m_seed11\\000050135040",
+          "checkpoint": "baselines/brax_go1_200m_seed11/000050135040",
           "training_seed": 11,
           "checkpoint_step": 50135040,
           "eval_seed": 20000,
@@ -1457,7 +1457,7 @@
         },
         {
           "protocol": "brax-ppo-command-tracking-v2",
-          "checkpoint": "C:\\Users\\ravid\\Desktop\\rl-launchpad\\baselines\\brax_go1_200m_seed12\\000050135040",
+          "checkpoint": "baselines/brax_go1_200m_seed12/000050135040",
           "training_seed": 12,
           "checkpoint_step": 50135040,
           "eval_seed": 20000,
@@ -1747,7 +1747,7 @@
       "seed_results": [
         {
           "protocol": "brax-ppo-command-tracking-v2",
-          "checkpoint": "C:\\Users\\ravid\\Desktop\\rl-launchpad\\baselines\\brax_go1_200m\\000100270080",
+          "checkpoint": "baselines/brax_go1_200m/000100270080",
           "training_seed": 10,
           "checkpoint_step": 100270080,
           "eval_seed": 20000,
@@ -2021,7 +2021,7 @@
         },
         {
           "protocol": "brax-ppo-command-tracking-v2",
-          "checkpoint": "C:\\Users\\ravid\\Desktop\\rl-launchpad\\baselines\\brax_go1_200m_seed11\\000100270080",
+          "checkpoint": "baselines/brax_go1_200m_seed11/000100270080",
           "training_seed": 11,
           "checkpoint_step": 100270080,
           "eval_seed": 20000,
@@ -2295,7 +2295,7 @@
         },
         {
           "protocol": "brax-ppo-command-tracking-v2",
-          "checkpoint": "C:\\Users\\ravid\\Desktop\\rl-launchpad\\baselines\\brax_go1_200m_seed12\\000100270080",
+          "checkpoint": "baselines/brax_go1_200m_seed12/000100270080",
           "training_seed": 12,
           "checkpoint_step": 100270080,
           "eval_seed": 20000,
@@ -2585,7 +2585,7 @@
       "seed_results": [
         {
           "protocol": "brax-ppo-command-tracking-v2",
-          "checkpoint": "C:\\Users\\ravid\\Desktop\\rl-launchpad\\baselines\\brax_go1_200m\\000150405120",
+          "checkpoint": "baselines/brax_go1_200m/000150405120",
           "training_seed": 10,
           "checkpoint_step": 150405120,
           "eval_seed": 20000,
@@ -2859,7 +2859,7 @@
         },
         {
           "protocol": "brax-ppo-command-tracking-v2",
-          "checkpoint": "C:\\Users\\ravid\\Desktop\\rl-launchpad\\baselines\\brax_go1_200m_seed11\\000150405120",
+          "checkpoint": "baselines/brax_go1_200m_seed11/000150405120",
           "training_seed": 11,
           "checkpoint_step": 150405120,
           "eval_seed": 20000,
@@ -3133,7 +3133,7 @@
         },
         {
           "protocol": "brax-ppo-command-tracking-v2",
-          "checkpoint": "C:\\Users\\ravid\\Desktop\\rl-launchpad\\baselines\\brax_go1_200m_seed12\\000150405120",
+          "checkpoint": "baselines/brax_go1_200m_seed12/000150405120",
           "training_seed": 12,
           "checkpoint_step": 150405120,
           "eval_seed": 20000,
@@ -3423,7 +3423,7 @@
       "seed_results": [
         {
           "protocol": "brax-ppo-command-tracking-v2",
-          "checkpoint": "C:\\Users\\ravid\\Desktop\\rl-launchpad\\baselines\\brax_go1_200m\\000200540160",
+          "checkpoint": "baselines/brax_go1_200m/000200540160",
           "training_seed": 10,
           "checkpoint_step": 200540160,
           "eval_seed": 20000,
@@ -3697,7 +3697,7 @@
         },
         {
           "protocol": "brax-ppo-command-tracking-v2",
-          "checkpoint": "C:\\Users\\ravid\\Desktop\\rl-launchpad\\baselines\\brax_go1_200m_seed11\\000200540160",
+          "checkpoint": "baselines/brax_go1_200m_seed11/000200540160",
           "training_seed": 11,
           "checkpoint_step": 200540160,
           "eval_seed": 20000,
@@ -3971,7 +3971,7 @@
         },
         {
           "protocol": "brax-ppo-command-tracking-v2",
-          "checkpoint": "C:\\Users\\ravid\\Desktop\\rl-launchpad\\baselines\\brax_go1_200m_seed12\\000200540160",
+          "checkpoint": "baselines/brax_go1_200m_seed12/000200540160",
           "training_seed": 12,
           "checkpoint_step": 200540160,
           "eval_seed": 20000,

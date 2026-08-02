@@ -1,4 +1,4 @@
-"""Assemble the narrated, at-most-two-minute submission demo."""
+"""Assemble a captioned or narrated, at-most-two-minute submission demo."""
 
 from __future__ import annotations
 

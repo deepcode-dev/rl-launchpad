@@ -17,12 +17,12 @@ This implementation plan synthesizes the findings of our 3 specialized AI subage
 
 ### Component 1: Algorithm & Loss Semantics (`ppo/ppo.py` & `ppo/train_multi_seed.py`)
 
-#### [MODIFY] [ppo/ppo.py](file:///c:/Users/ravid/Desktop/rl-launchpad/ppo/ppo.py)
+#### [MODIFY] [ppo/ppo.py](ppo/ppo.py)
 * **Epoch-Level KL Early Stopping**: Move `approx_kl` early stopping check from minibatch level to epoch level.
 * **Per-Minibatch Advantage Normalization**: Normalize advantages inside the inner minibatch update loop ($A_{\text{mb}} = \frac{A_{\text{mb}} - \mu}{\sigma + 10^{-8}}$).
 * **Unclipped Critic Value Loss**: Use MSE value function loss to prevent gradient truncation on the critic.
 
-#### [MODIFY] [configs/cluster_100m_v2.yaml](file:///c:/Users/ravid/Desktop/rl-launchpad/configs/cluster_100m_v2.yaml)
+#### [MODIFY] [configs/cluster_100m_v2.yaml](configs/cluster_100m_v2.yaml)
 * **`num_envs: 8192`**: Unclipped gradient environment scale.
 * **`history_len: 3`**: 144-dim actor observation space (3 frames of temporal history).
 * **`gamma: 0.99`**: 100-step planning horizon (2.0 seconds).
@@ -31,7 +31,7 @@ This implementation plan synthesizes the findings of our 3 specialized AI subage
 
 ### Component 2: Environment Inter-Op (`ppo/env.py`)
 
-#### [MODIFY] [ppo/env.py](file:///c:/Users/ravid/Desktop/rl-launchpad/ppo/env.py)
+#### [MODIFY] [ppo/env.py](ppo/env.py)
 * **Responsive EMA Filter**: Set $\hat{a}_t = 0.4 \hat{a}_{t-1} + 0.6 a_t$ for 2x faster motor response.
 * **Staggered Episode Resets**: Maintain randomized initial episode offsets to prevent synchronized environment reset spikes.
 

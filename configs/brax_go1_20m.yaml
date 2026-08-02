@@ -1,5 +1,5 @@
 batch_size: 256
-checkpoint_dir: /home/r/ravideep/rl-launchpad/checkpoints/brax_go1_20m
+checkpoint_dir: checkpoints/brax_go1_20m
 clipping_epsilon: 0.2
 discounting: 0.97
 entropy_cost: 0.01

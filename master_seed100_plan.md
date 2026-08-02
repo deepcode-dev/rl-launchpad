@@ -94,7 +94,7 @@ Once Seed 100 completes on cluster, pull the checkpoint and run deterministic ev
 
 ```powershell
 # 1. Pull checkpoint via SCP:
-scp -J ravideep@stujump.comp.nus.edu.sg ravideep@xlogin.comp.nus.edu.sg:~/rl-launchpad/checkpoints/cluster_100m_v2/ppo_seed100.pt NEW_checkpoints/cluster_100m_v2/
+scp -J <jump-host> <user>@<login-host>:~/rl-launchpad/checkpoints/cluster_100m_v2/ppo_seed100.pt NEW_checkpoints/cluster_100m_v2/
 
 # 2. View live in 3D interactive viewer:
 python eval/view_native.py NEW_checkpoints/cluster_100m_v2/ppo_seed100.pt --config configs/seed100.yaml

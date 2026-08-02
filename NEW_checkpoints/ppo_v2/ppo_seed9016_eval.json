@@ -122,8 +122,8 @@
   "mean_episode_length": 1000.0,
   "mean_linear_velocity_error": 0.08625916141572285,
   "mean_yaw_rate_error": 0.06751050802195761,
-  "mean_latency_ms": 0.44267052199513274,
-  "p95_latency_ms": 0.6425999999919441,
+  "mean_latency_ms": 0.5221613559986509,
+  "p95_latency_ms": 0.8161999994626967,
   "episode_rewards": [
     19.830684408953086,
     19.849853450404915,

@@ -34,7 +34,7 @@ Key fields:
 | `learning_rate` / `entropy_cost` | `3e-4` / `0.01` | Brax PPO defaults |
 | `discounting` / `gae_lambda` | `0.97` / `0.95` | must mirror the custom trainer |
 | `unroll_length` | `20` | rollout length per update |
-| `checkpoint_dir` | `/home/r/ravideep/.../brax_go1_200m` | where step dirs are written |
+| `checkpoint_dir` | `checkpoints/brax_go1_200m` | where step dirs are written |
 | `seed` | `10` | training seed (set a new one per run) |
 
 > To train additional seeds, make a copy of the config with a **new `seed`** and a
